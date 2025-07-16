@@ -1,0 +1,5 @@
+// filepath: /c:/Galpon/verdetta/src/.babelrc
+{
+  "presets": ["babel-preset-expo"],
+  "plugins": ["@babel/plugin-proposal-optional-chaining"]
+}
