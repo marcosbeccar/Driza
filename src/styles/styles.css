@@ -77,19 +77,3 @@ h1, h2, h3, h4, h5, h6 {
     bottom: 0;
     width: 100%;
 }
-
-.ad-section {
-    display: flex;
-    justify-content: space-between;
-    margin: 20px 0;
-}
-
-.ad {
-    background: #ffffff;
-    border: 1px solid #dddddd;
-    border-radius: 5px;
-    padding: 10px;
-    flex: 1;
-    margin: 0 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}

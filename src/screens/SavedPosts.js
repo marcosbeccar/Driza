@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet } from "react-native";
 import { db, auth } from "../firebase/config";
-import Post from "./Post";
+import Post from "../components/Post";
 
 const SavedPosts = () => {
   const [savedPosts, setSavedPosts] = useState([]);

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
 import { db, auth } from '../firebase/config';
-import Post from './Post';
-import AdSection from './AdSection';
+import Post from '../components/Post';
+import colors from '../styles/colors'; // Importa los colores
 
 const MainPage = () => {
   const [posts, setPosts] = useState([]);
@@ -29,7 +29,6 @@ const MainPage = () => {
 
   return (
     <View style={styles.container}>
-      <AdSection />
       <FlatList
         data={posts}
         keyExtractor={(item) => item.id}
@@ -52,7 +51,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: colors.background, // Usando el color de fondo
   },
 });
 

@@ -11,7 +11,7 @@ const Post = ({ title, images = [], description, savedCount = 0, onSave, onBuy }
         ))}
       </View>
       <Text style={styles.description}>{description}</Text>
-      <Text style={styles.savedCount}>Guardado por {savedCount} usuarios</Text>
+      <Text style={styles.savedCount}>Guardado por {savedCount} usuario/s</Text>
       {onSave && <Button title="Guardar" onPress={onSave} />}
       {onBuy && <Button title="Buy" onPress={onBuy} />}
     </View>

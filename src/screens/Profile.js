@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from "react-native";
 import { auth, db } from "../firebase/config";
-import Post from "./Post";
+import Post from "../components/Post";
 
 export default class Profile extends Component {
   constructor(props) {
