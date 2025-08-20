@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { auth } from "../firebase/config";
+import colors from "../styles/colors";
 
 export default class Login extends Component {
   constructor(props) {
@@ -76,7 +77,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
-    backgroundColor: "#c3e6fa",
+    backgroundColor: colors.background,
   },
   title: {
     fontSize: 24,
@@ -84,16 +85,17 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 50,
-    borderColor: "#ced4da",
+    borderColor: colors.border,
     borderWidth: 1,
     paddingHorizontal: 15,
     borderRadius: 8,
     marginVertical: 10,
     width: "100%",
     backgroundColor: "#F5FBFD",
+    color: colors.textPrimary,
   },
   button: {
-    backgroundColor: "#2373FA",
+    backgroundColor: colors.primaryButton,
     paddingVertical: 10,
     borderRadius: 25,
     width: "100%",
@@ -102,9 +104,10 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#E7F5F3",
     fontSize: 20,
+    textAlign: "center",
   },
   errorText: {
-    color: "red",
+    color: colors.error,
     marginTop: 10,
   },
   registerText: {

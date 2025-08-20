@@ -4,13 +4,14 @@ import "firebase/compat/firestore";
 import "firebase/compat/database"; // <-- Agrega esto
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC13ClKfPXAnsom4WS5xyCumqqKH0mZZiA",
-  authDomain: "verdetta-54702.firebaseapp.com",
-  projectId: "verdetta-54702",
-  storageBucket: "verdetta-54702.appspot.com",
-  messagingSenderId: "820507286753",
-  appId: "1:820507286753:web:bdad0e29231851eb0faba0",
-  measurementId: "G-GQ1JGKE8H3"
+  apiKey: "AIzaSyDyu_MwcZMqbzwZBhIsSUCblvfvQ5DrEWo",
+  authDomain: "mercado-udesa.firebaseapp.com",
+  databaseURL: "https://mercado-udesa-default-rtdb.firebaseio.com",
+  projectId: "mercado-udesa",
+  storageBucket: "mercado-udesa.firebasestorage.app",
+  messagingSenderId: "94304624728",
+  appId: "1:94304624728:web:b523a914b835654c70ea2d",
+  measurementId: "G-XMR84SV6M8"
 };
 
 if (!firebase.apps.length) {

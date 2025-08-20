@@ -1,89 +1,90 @@
-import React, { Component } from "react";
+import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
-import { db, auth } from "../firebase/config";
+import { auth } from "../firebase/config";
+import colors from "../styles/colors";
 
-export default class Register extends Component {
-  constructor(props) {
-    super(props);
+const Register = ({ navigation }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [userName, setUserName] = useState("");
+  const [errorMSG, setErrorMSG] = useState("");
 
-    this.state = {
-      email: "",
-      password: "",
-      userName: "",
-      errorMSG: "",
-    };
-  }
-
-  handleSubmit = () => {
-    const { email, password, userName } = this.state;
-
+  const handleRegister = () => {
     if (!email.endsWith("@udesa.edu.ar")) {
-      this.setState({ errorMSG: "Debes usar un email de la universidad (@udesa.edu.ar)" });
+      setErrorMSG("Debes usar un email de la universidad (@udesa.edu.ar)");
       return;
     }
 
     if (password.length < 6) {
-      this.setState({ errorMSG: "La contraseña debe tener al menos 6 caracteres" });
+      setErrorMSG("La contraseña debe tener al menos 6 caracteres");
       return;
     }
 
-    auth.createUserWithEmailAndPassword(email, password)
+    auth
+      .createUserWithEmailAndPassword(email, password)
       .then((userCredential) => {
         const userId = userCredential.user.uid;
         // Crea el usuario en la rama "users" con su UID como clave
-        db.ref(`users/${userId}`).set({
-          email: email,
-          userName: userName,
-          savedPosts: {} // Inicializa vacío
-        }).then(() => {
-          console.log('Usuario guardado en users');
-        });
-        userCredential.user.sendEmailVerification()
+        db.ref(`users/${userId}`)
+          .set({
+            email: email,
+            userName: userName,
+            savedPosts: {}, // Inicializa vacío
+          })
           .then(() => {
-            this.setState({ errorMSG: "" });
-            this.props.navigation.navigate("VerifyEmail");
+            console.log("Usuario guardado en users");
           });
+        userCredential.user.sendEmailVerification().then(() => {
+          setErrorMSG("");
+          navigation.navigate("Login");
+        });
       })
       .catch((error) => {
-        this.setState({ errorMSG: error.message });
+        setErrorMSG(error.message);
       });
   };
 
-  render() {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Registrate</Text>
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Registrate</Text>
 
-        <TextInput
-          style={styles.input}
-          keyboardType="email-address"
-          placeholder="Email"
-          onChangeText={(text) => this.setState({ email: text })}
-          value={this.state.email}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Contraseña"
-          secureTextEntry={true}
-          onChangeText={(text) => this.setState({ password: text })}
-          value={this.state.password}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Nombre de usuario"
-          onChangeText={(text) => this.setState({ userName: text })}
-          value={this.state.userName}
-        />
+      <TextInput
+        style={styles.input}
+        keyboardType="email-address"
+        placeholder="Email"
+        onChangeText={setEmail}
+        value={email}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Contraseña"
+        secureTextEntry={true}
+        onChangeText={setPassword}
+        value={password}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Nombre de usuario"
+        onChangeText={setUserName}
+        value={userName}
+      />
 
-        <TouchableOpacity style={styles.button} onPress={this.handleSubmit}>
-          <Text style={styles.buttonText}>Registrar</Text>
-        </TouchableOpacity>
+      {errorMSG !== "" && <Text style={styles.errorText}>{errorMSG}</Text>}
 
-        {this.state.errorMSG && <Text style={styles.errorText}>{this.state.errorMSG}</Text>}
-      </View>
-    );
-  }
-}
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+        <Text style={styles.buttonText}>Registrar</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.question}>¿Ya tenés una cuenta?</Text>
+      <TouchableOpacity
+        style={[styles.button, styles.secondaryButton]}
+        onPress={() => navigation.navigate("Login")}
+      >
+        <Text style={styles.buttonText}>Volver al Login</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -91,15 +92,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
-    backgroundColor: "#c3e6fa",
+    backgroundColor: colors.background,
   },
   title: {
     fontSize: 24,
+    fontWeight: "bold",
     marginBottom: 20,
+    color: colors.textPrimary,
   },
   input: {
     height: 50,
-    borderColor: "#ced4da",
+    borderColor: colors.border,
     borderWidth: 1,
     paddingHorizontal: 15,
     borderRadius: 8,
@@ -107,19 +110,34 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "#F5FBFD",
   },
-  button: {
-    backgroundColor: "#007bff",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    marginTop: 10,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-  },
   errorText: {
     color: "red",
     marginTop: 10,
   },
+  button: {
+    backgroundColor: colors.primaryButton,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 20,
+    width: "100%",
+    alignItems: "center",
+  },
+  secondaryButton: {
+    backgroundColor: colors.secondaryButton,
+    marginTop: 10,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  question: {
+    marginTop: 20,
+    fontSize: 16,
+    textAlign: "center",
+    color: colors.textSecondary,
+  },
 });
+
+export default Register;

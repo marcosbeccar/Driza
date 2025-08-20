@@ -5,7 +5,6 @@ import { auth } from './src/firebase/config';
 
 import Login from './src/screens/Login';
 import Register from './src/screens/Register';
-import VerifyEmail from './src/screens/VerifyEmail';
 import TabNavigator from './src/components/TabNavigator';
 
 const Stack = createNativeStackNavigator();
@@ -27,7 +26,6 @@ export default function App() {
           <>
             <Stack.Screen name="Login" component={Login} />
             <Stack.Screen name="Register" component={Register} />
-            <Stack.Screen name="VerifyEmail" component={VerifyEmail} />
           </>
         ) : (
           <Stack.Screen name="Main" component={TabNavigator} />

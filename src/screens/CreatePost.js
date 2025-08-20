@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet, Image, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import { db, auth } from "../firebase/config";
+import colors from '../styles/colors';
 
 const CreatePost = () => {
   const [title, setTitle] = useState("");
@@ -34,58 +35,87 @@ const CreatePost = () => {
       savedBy: {} // Inicializa vacío
     })
     .then(() => {
-      alert("Post created successfully!");
+      alert("Post creado exitosamente!");
       setTitle("");
       setDescription("");
       setImages([]);
     })
     .catch((error) => {
-      console.error("Error creating post: ", error);
+      console.error("Error creando el post: ", error);
     });
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Create a New Post</Text>
+      <Text style={styles.title}>Crear Publicación</Text>
       <TextInput
         style={styles.input}
-        placeholder="Title"
+        placeholder="Título"
+        placeholderTextColor={colors.textSecondary}
         value={title}
         onChangeText={setTitle}
       />
       <TextInput
-        style={styles.input}
-        placeholder="Description"
+        style={[styles.input, styles.textArea]}
+        placeholder="Descripción"
+        placeholderTextColor={colors.textSecondary}
         value={description}
         onChangeText={setDescription}
         multiline
       />
-      <Button title="Pick Images" onPress={pickImages} />
+      <TouchableOpacity style={styles.button} onPress={pickImages}>
+        <Text style={styles.buttonText}>Seleccionar Imágenes</Text>
+      </TouchableOpacity>
       <View style={styles.imagePreview}>
         {images.map((image, index) => (
           <Image key={index} source={{ uri: image }} style={styles.image} />
         ))}
       </View>
-      <Button title="Submit Post" onPress={handleSubmit} />
+      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+        <Text style={styles.submitButtonText}>Publicar</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: colors.background,
     padding: 20,
-    backgroundColor: "#f9f9f9",
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
+    fontWeight: "bold",
+    color: colors.textPrimary,
     marginBottom: 20,
+    textAlign: "center",
   },
   input: {
-    height: 40,
-    borderColor: "#ccc",
+    borderColor: colors.border,
     borderWidth: 1,
+    backgroundColor: "#fff",
+    color: colors.textPrimary,
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 15,
+    fontSize: 16,
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: "top",
+  },
+  button: {
+    backgroundColor: colors.secondaryButton,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
     marginBottom: 20,
-    paddingHorizontal: 10,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   imagePreview: {
     flexDirection: "row",
@@ -95,8 +125,22 @@ const styles = StyleSheet.create({
   image: {
     width: 100,
     height: 100,
+    borderRadius: 8,
     marginRight: 10,
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  submitButton: {
+    backgroundColor: colors.primaryButton,
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
 

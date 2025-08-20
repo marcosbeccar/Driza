@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from "react-native";
 import { auth, db } from "../firebase/config";
 import Post from "../components/Post";
+import colors from "../styles/colors";
 
 export default class Profile extends Component {
   constructor(props) {
@@ -94,7 +95,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#c3e6fa",
+    backgroundColor: colors.background,
   },
   title: {
     fontSize: 24,
@@ -142,5 +143,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "600",
+  },
+  text: {
+    color: colors.textPrimary,
+    fontSize: 16,
   },
 });

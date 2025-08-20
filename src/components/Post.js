@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Image, Button, StyleSheet } from 'react-native';
+import colors from '../styles/colors';
 
 const Post = ({ title, images = [], description, savedCount = 0, onSave, onBuy }) => {
   return (
@@ -22,19 +23,19 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 20,
     padding: 15,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    borderColor: '#e1dfdf',
+    backgroundColor: colors.background,
+    borderColor: colors.border,
     borderWidth: 1,
+    borderRadius: 8,
     shadowColor: 'black',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
   title: {
+    color: colors.textPrimary,
     fontSize: 18,
     fontWeight: 'bold',
-    color: 'black',
     marginBottom: 10,
   },
   imageContainer: {
@@ -50,8 +51,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   description: {
+    color: colors.textSecondary,
     fontSize: 14,
-    color: 'grey',
     marginBottom: 10,
   },
   savedCount: {

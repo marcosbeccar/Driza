@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
 import { db, auth } from '../firebase/config';
 import Post from '../components/Post';
-import colors from '../styles/colors'; // Importa los colores
+import colors from '../styles/colors'; 
 
 const MainPage = () => {
   const [posts, setPosts] = useState([]);
@@ -50,8 +50,12 @@ const MainPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
-    backgroundColor: colors.background, // Usando el color de fondo
+    backgroundColor: colors.background,
+  },
+  title: {
+    color: colors.textPrimary,
+    fontSize: 20,
+    fontWeight: 'bold',
   },
 });
 

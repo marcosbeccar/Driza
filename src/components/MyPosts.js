@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from "react-native";
 import { db, auth } from "../firebase/config";
 import Post from "./Post";
+import colors from '../styles/colors';
 
 const MyPosts = () => {
   const [posts, setPosts] = useState([]);
@@ -58,14 +59,14 @@ const MyPosts = () => {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: colors.background,
     flex: 1,
     padding: 20,
-    backgroundColor: "#f8f8f8",
   },
   title: {
+    color: colors.textPrimary,
     fontSize: 24,
     fontWeight: "bold",
-    color: "#228bfa",
     marginBottom: 20,
     textAlign: "center",
   },
@@ -84,6 +85,10 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "600",
+  },
+  border: {
+    borderColor: colors.border,
+    borderWidth: 1,
   },
 });
 
