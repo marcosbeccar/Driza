@@ -17,11 +17,6 @@ export default class Login extends Component {
   handleSubmit = () => {
     const { email, password } = this.state;
 
-    if (!email.endsWith("@udesa.edu.ar")) {
-      this.setState({ errorMSG: "Debes usar un email de la universidad (@udesa.edu.ar)" });
-      return;
-    }
-
     if (password.length < 6) {
       this.setState({ errorMSG: "La contraseña debe tener al menos 6 caracteres" });
       return;
@@ -65,7 +60,12 @@ export default class Login extends Component {
 
         {this.state.errorMSG && <Text style={styles.errorText}>{this.state.errorMSG}</Text>}
 
-        <Text style={styles.registerText}>¿No tienes una cuenta? <Text onPress={() => this.props.navigation.navigate("Register")} style={styles.link}>Regístrate</Text></Text>
+        <Text style={styles.registerText}>
+          ¿No tienes una cuenta?{" "}
+          <Text onPress={() => this.props.navigation.navigate("Register")} style={styles.link}>
+            Regístrate
+          </Text>
+        </Text>
       </View>
     );
   }

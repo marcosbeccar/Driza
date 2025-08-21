@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "verdetta-54702"
-  }
+    "default": "mercado-udesa",
+    "Mercado UdeSA": "mercado-udesa"
+  },
+  "targets": {},
+  "etags": {}
 }

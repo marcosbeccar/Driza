@@ -9,3 +9,12 @@ const colors = {
 };
 
 export default colors;
+
+
+'paleta de colores:'
+/* 
+#05383A
+#A47551
+#962A51
+#96A39E 
+*/

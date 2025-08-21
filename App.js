@@ -1,32 +1,42 @@
-import React, { useEffect, useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { auth } from './src/firebase/config';
+import React, { useEffect, useState } from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { auth } from "./src/firebase/config";
+import { View, Text } from "react-native";
 
-import Login from './src/screens/Login';
-import Register from './src/screens/Register';
-import TabNavigator from './src/components/TabNavigator';
+import AuthScreen from "./src/screens/AuthScreen";
+import TabNavigator from "./src/components/TabNavigator";
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // Nuevo estado para manejar la carga inicial
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((u) => {
       setUser(u);
+      setLoading(false); // Deja de cargar una vez que se verifica el estado del usuario
     });
     return unsubscribe;
   }, []);
+
+  if (loading) {
+    // Mientras se verifica el estado del usuario, muestra una pantalla de carga
+    return (
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Loading" component={LoadingScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  }
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
-          <>
-            <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="Register" component={Register} />
-          </>
+          <Stack.Screen name="Auth" component={AuthScreen} />
         ) : (
           <Stack.Screen name="Main" component={TabNavigator} />
         )}
@@ -34,3 +44,10 @@ export default function App() {
     </NavigationContainer>
   );
 }
+
+// Pantalla de carga mientras se verifica el estado del usuario
+const LoadingScreen = () => (
+  <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+    <Text>Cargando...</Text>
+  </View>
+);

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "MercadoUdesa",
-    "slug": "MercadoUdesa",
+    "name": "mercadoUdesa",
+    "slug": "mercadoudesa",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -23,6 +23,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "42f2410e-f365-42a2-aea9-9c76e648949b"
+      }
+    },
+    "owner": "mercadoudesa"
   }
 }
