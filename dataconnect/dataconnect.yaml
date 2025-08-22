@@ -1,5 +1,5 @@
 specVersion: "v1"
-serviceId: "remart"
+serviceId: "driza"
 location: "us-central1"
 schema:
   source: "./schema"
@@ -7,6 +7,6 @@ schema:
     postgresql:
       database: "fdcdb"
       cloudSql:
-        instanceId: "remart-fdc"
+        instanceId: "driza-fdc"
       # schemaValidation: "COMPATIBLE"
-connectorDirs: ["./connector"]
+connectorDirs: ["./example"]

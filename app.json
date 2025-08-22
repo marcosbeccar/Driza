@@ -1,34 +1,36 @@
 {
   "expo": {
-    "name": "mercadoUdesa",
-    "slug": "mercadoudesa",
+    "name": "driza",
+    "slug": "driza",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/favicon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/favicon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.driza.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.driza.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "42f2410e-f365-42a2-aea9-9c76e648949b"
+        "projectId": "c8eae238-075b-49d6-be2d-e505bb6b47a6"
       }
     },
-    "owner": "mercadoudesa"
+    "owner": "driza"
   }
 }

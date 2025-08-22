@@ -1,8 +1,5 @@
 {
   "projects": {
-    "default": "mercado-udesa",
-    "Mercado UdeSA": "mercado-udesa"
-  },
-  "targets": {},
-  "etags": {}
+    "default": "driza-9870c"
+  }
 }
