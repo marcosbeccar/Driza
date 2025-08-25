@@ -1,0 +1,4 @@
+Pasos para actualizar hosting:
+
+npx expo export
+firebase deploy

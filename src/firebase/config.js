@@ -4,14 +4,13 @@ import { getAuth } from "firebase/auth";
 import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDoigDBLklzR_yLDS5GkjE8Us9PjRFbzQg",
-  authDomain: "driza-9870c.firebaseapp.com",
-  databaseURL: "https://driza-9870c-default-rtdb.firebaseio.com",
-  projectId: "driza-9870c",
-  storageBucket: "driza-9870c.firebasestorage.app",
-  messagingSenderId: "51829864704",
-  appId: "1:51829864704:web:ab764fb9a03b9993309be5",
-  measurementId: "G-GHBQZRSHJ9"
+  apiKey: "AIzaSyDtIeyExZhqJKWSM1QvAH5HlWNGIrcPz8E",
+  authDomain: "drizacv.firebaseapp.com",
+  projectId: "drizacv",
+  storageBucket: "drizacv.firebasestorage.app",
+  messagingSenderId: "271157129829",
+  appId: "1:271157129829:web:f359c3e3b6f87ac29e4c8c",
+  measurementId: "G-24MHPE6TXZ"
 };
 
 // Inicializar Firebase solo una vez

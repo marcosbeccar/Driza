@@ -6,17 +6,18 @@ import { View, Text } from "react-native";
 
 import AuthScreen from "./src/screens/AuthScreen";
 import TabNavigator from "./src/components/TabNavigator";
+import TermsScreen from "./src/screens/TermsScreen";
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // Nuevo estado para manejar la carga inicial
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((u) => {
       setUser(u);
-      setLoading(false); // Deja de cargar una vez que se verifica el estado del usuario
+      setLoading(false); // Actualiza el estado de carga incluso si no hay usuario
     });
     return unsubscribe;
   }, []);
@@ -24,11 +25,9 @@ export default function App() {
   if (loading) {
     // Mientras se verifica el estado del usuario, muestra una pantalla de carga
     return (
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Loading" component={LoadingScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Cargando...</Text>
+      </View>
     );
   }
 
@@ -36,7 +35,10 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
-          <Stack.Screen name="Auth" component={AuthScreen} />
+          <>
+            <Stack.Screen name="Auth" component={AuthScreen} />
+            <Stack.Screen name="TermsScreen" component={TermsScreen} />
+          </>
         ) : (
           <Stack.Screen name="Main" component={TabNavigator} />
         )}
@@ -44,10 +46,3 @@ export default function App() {
     </NavigationContainer>
   );
 }
-
-// Pantalla de carga mientras se verifica el estado del usuario
-const LoadingScreen = () => (
-  <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-    <Text>Cargando...</Text>
-  </View>
-);

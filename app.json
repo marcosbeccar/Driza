@@ -31,6 +31,9 @@
         "projectId": "c8eae238-075b-49d6-be2d-e505bb6b47a6"
       }
     },
-    "owner": "driza"
+    "owner": "driza",
+    "platforms": [
+      "web"
+    ]
   }
 }
