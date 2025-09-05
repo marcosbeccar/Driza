@@ -1,21 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Platform, Linking } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import * as Google from "expo-auth-session/providers/google";
 import * as AuthSession from "expo-auth-session";
 import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
 import { ref, set, get } from "firebase/database";
 import { auth, db } from "../firebase/config";
 import colors from "../styles/colors";
+import { useNavigation } from "@react-navigation/native"; // Importa useNavigation
 
 const AuthScreen = () => {
   const [termsAccepted, setTermsAccepted] = useState(false); // Estado para los términos
+  const navigation = useNavigation(); // Inicializa la navegación
   const redirectUri = AuthSession.makeRedirectUri({
     native: "com.driza.app:/oauthredirect",
     useProxy: Platform.OS !== "web",
   });
 
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: "51829864704-l41c2kuiaht92friktitcod1hv4mui5u.apps.googleusercontent.com",
+    clientId: "271157129829-njsv8phcv3jdae0ddqpl99cvra6svroe.apps.googleusercontent.com",
     iosClientId: "51829864704-ul8m3am1hn8q50q789ehak0cjfka6vso.apps.googleusercontent.com",
     androidClientId: "51829864704-5q2pee27emq84r1ghrorj0oeu0hp8uts.apps.googleusercontent.com",
     redirectUri,
@@ -74,7 +76,7 @@ const AuthScreen = () => {
           Acepto los{" "}
           <Text
             style={styles.link}
-            onPress={() => Linking.openURL("driza://TermsScreen")}
+            onPress={() => navigation.navigate("TermsScreen")} // Navega a TermsScreen
           >
             Términos y Condiciones
           </Text>
