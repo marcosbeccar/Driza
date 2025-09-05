@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  ScrollView,
+} from "react-native";
 import { getDatabase, ref, get } from "firebase/database";
-import { app } from "../firebase/config"; // importa el app inicializado
+import { app } from "../firebase/config";
 import colors from "../styles/colors";
 
 const db = getDatabase(app);
@@ -12,6 +20,8 @@ const DetailPost = ({ route }) => {
   const [authorOrg, setAuthorOrg] = useState("NO");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  const screenWidth = Dimensions.get("window").width;
+
   useEffect(() => {
     const fetchPost = async () => {
       try {
@@ -20,7 +30,6 @@ const DetailPost = ({ route }) => {
           const postData = postSnap.val();
           setPost(postData);
 
-          // Obtener organización del autor
           const authorSnap = await get(ref(db, `users/${postData.userId}/organizacion`));
           if (authorSnap.exists()) {
             setAuthorOrg(authorSnap.val());
@@ -34,18 +43,22 @@ const DetailPost = ({ route }) => {
     fetchPost();
   }, [postId]);
 
-  if (!post) return <Text style={styles.loading}>Cargando...</Text>;
+  if (!post) {
+    return <Text style={styles.loading}>Cargando...</Text>;
+  }
+
+  const images = post.images || []; // Manejar posts sin imágenes
 
   const nextImage = () => {
-    if (post.images.length > 0) {
-      setCurrentImageIndex((prev) => (prev + 1) % post.images.length);
+    if (images.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length);
     }
   };
 
   const prevImage = () => {
-    if (post.images.length > 0) {
+    if (images.length > 0) {
       setCurrentImageIndex((prev) =>
-        prev === 0 ? post.images.length - 1 : prev - 1
+        prev === 0 ? images.length - 1 : prev - 1
       );
     }
   };
@@ -53,41 +66,59 @@ const DetailPost = ({ route }) => {
   const formattedDate = new Date(post.createdAt).toLocaleString();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{post.title}</Text>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.card}>
+        <Text style={styles.title}>{post.title}</Text>
 
-      {post.images.length > 0 && (
-        <View style={styles.carousel}>
-          <TouchableOpacity onPress={prevImage} style={styles.arrow}>
-            <Text style={styles.arrowText}>{"<"}</Text>
-          </TouchableOpacity>
-          <Image
-            source={{ uri: post.images[currentImageIndex] }}
-            style={styles.image}
-          />
-          <TouchableOpacity onPress={nextImage} style={styles.arrow}>
-            <Text style={styles.arrowText}>{">"}</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        {images.length > 0 ? (
+          <View style={styles.carousel}>
+            <TouchableOpacity onPress={prevImage} style={styles.arrow}>
+              <Text style={styles.arrowText}>{"<"}</Text>
+            </TouchableOpacity>
+            <Image
+              source={{ uri: images[currentImageIndex] }}
+              style={[styles.image, { width: screenWidth * 0.7, height: screenWidth * 0.7 }]}
+            />
+            <TouchableOpacity onPress={nextImage} style={styles.arrow}>
+              <Text style={styles.arrowText}>{">"}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={[styles.imagePlaceholder, { width: screenWidth * 0.7, height: screenWidth * 0.7 }]}>
+            <Text style={styles.noImageText}>Sin imagen</Text>
+          </View>
+        )}
 
-      <Text style={styles.description}>{post.description}</Text>
-      <Text style={styles.date}>Publicado: {formattedDate}</Text>
+        <Text style={styles.description}>{post.description}</Text>
+        <Text style={styles.date}>Publicado: {formattedDate}</Text>
 
-      {authorOrg === "NO" && (
-        <Text style={styles.warning}>
-          ⚠️ El autor de esta publicación no pertenece a la organización
-        </Text>
-      )}
-    </View>
+        {authorOrg === "NO" && (
+          <Text style={styles.warning}>
+            ⚠️ El autor de esta publicación no pertenece a la organización
+          </Text>
+        )}
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
+  scrollContainer: {
+    flexGrow: 1,
+    paddingVertical: 20,
+    alignItems: "center",
     backgroundColor: colors.background,
+  },
+  card: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5,
   },
   loading: {
     fontSize: 16,
@@ -96,10 +127,11 @@ const styles = StyleSheet.create({
     marginTop: 50,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "bold",
     marginBottom: 15,
     color: colors.textPrimary,
+    textAlign: "center",
   },
   carousel: {
     flexDirection: "row",
@@ -108,9 +140,19 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   image: {
-    width: 250,
-    height: 250,
-    borderRadius: 8,
+    borderRadius: 10,
+    resizeMode: "cover",
+  },
+  imagePlaceholder: {
+    backgroundColor: colors.border,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
+    marginBottom: 15,
+  },
+  noImageText: {
+    color: colors.textSecondary,
+    fontSize: 16,
   },
   arrow: {
     paddingHorizontal: 10,
@@ -135,6 +177,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 14,
     marginTop: 10,
+    textAlign: "center",
   },
 });
 

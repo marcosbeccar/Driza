@@ -1,28 +1,15 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-} from "react-native";
-import {
-  getDatabase,
-  ref,
-  onValue,
-  query,
-  orderByChild,
-} from "firebase/database";
-import { app } from "../firebase/config";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { getDatabase, ref, onValue, query, orderByChild, update } from "firebase/database";
+import { app, auth } from "../firebase/config";
 import colors from "../styles/colors";
+import Post from "../components/Post";
 import { useNavigation } from "@react-navigation/native";
 
 const MainPage = () => {
   const [posts, setPosts] = useState([]);
-  const navigation = useNavigation();
-
   const db = getDatabase(app);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const postsRef = query(ref(db, "posts"), orderByChild("createdAt"));
@@ -31,12 +18,8 @@ const MainPage = () => {
       if (snapshot.exists()) {
         const data = snapshot.val();
         const loadedPosts = Object.keys(data)
-          .map((key) => ({
-            id: key,
-            ...data[key],
-          }))
+          .map((key) => ({ id: key, ...data[key] }))
           .sort((a, b) => b.createdAt - a.createdAt); // más nuevos primero
-
         setPosts(loadedPosts);
       } else {
         setPosts([]);
@@ -46,40 +29,52 @@ const MainPage = () => {
     return () => unsubscribe();
   }, []);
 
-  const renderPost = ({ item }) => {
-    const portada = item.images?.[0]; // mostrar solo la primera como portada
-
-    return (
-      <TouchableOpacity
-        style={styles.postCard}
-        onPress={() => navigation.navigate("DetailPost", { postId: item.id })}
-      >
-        {portada && <Image source={{ uri: portada }} style={styles.image} />}
-        <View style={styles.textContainer}>
-          <Text style={styles.title} numberOfLines={1}>
-            {item.title}
-          </Text>
-          <Text style={styles.description} numberOfLines={2}>
-            {item.description}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
+  const handleSavePost = async (postId) => {
+    const userId = auth.currentUser.uid;
+    await update(ref(db, `users/${userId}/savedPosts`), { [postId]: true });
+    await update(ref(db, `posts/${postId}/savedBy`), { [userId]: true });
   };
 
-  return (
-    <View style={styles.container}>
-      {posts.length === 0 ? (
-        <Text style={styles.empty}>No hay publicaciones disponibles.</Text>
-      ) : (
-        <FlatList
-          data={posts}
-          renderItem={renderPost}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
+  // Filtrar por categoría
+  const promocionados = posts.filter((p) => p.categoria === "promocionado");
+  const normales = posts.filter((p) => !p.categoria || p.categoria === "normal");
+
+  // Distribuir normales en 3 filas
+  const normalRows = [[], [], []];
+  normales.forEach((post, idx) => normalRows[idx % 3].push(post));
+
+  const renderHorizontalRow = (data) => (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      {data.map((post) => (
+        <Post
+          key={post.id}
+          title={post.title}
+          images={post.images}
+          description={post.description}
+          savedCount={post.savedBy ? Object.keys(post.savedBy).length : 0}
+          onSave={() => handleSavePost(post.id)}
+          onPress={() => navigation.navigate("DetailPost", { postId: post.id })}
         />
+      ))}
+    </ScrollView>
+  );
+
+  return (
+    <ScrollView style={styles.container}>
+      {promocionados.length > 0 && (
+        <View style={styles.rowContainer}>
+          <Text style={styles.rowTitle}>Promocionados</Text>
+          {renderHorizontalRow(promocionados)}
+        </View>
       )}
-    </View>
+
+      {normalRows.map((row, idx) => (
+        <View style={styles.rowContainer} key={idx}>
+          <Text style={styles.rowTitle}>Normal - Fila {idx + 1}</Text>
+          {renderHorizontalRow(row)}
+        </View>
+      ))}
+    </ScrollView>
   );
 };
 
@@ -87,48 +82,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    padding: 10,
+    paddingVertical: 10,
   },
-  list: {
-    paddingBottom: 20,
+  rowContainer: {
+    marginBottom: 25,
   },
-  postCard: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
-  },
-  image: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  textContainer: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: "700",
+  rowTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
     color: colors.textPrimary,
-    marginBottom: 4,
-  },
-  description: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  empty: {
-    fontSize: 16,
-    textAlign: "center",
-    marginTop: 50,
-    color: colors.textSecondary,
+    marginHorizontal: 10,
+    marginBottom: 10,
   },
 });
 
