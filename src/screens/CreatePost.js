@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView } from "react-native";
-import * as ImagePicker from 'expo-image-picker';
+import * as ImagePicker from "expo-image-picker";
 import { db, auth } from "../firebase/config";
-import colors from '../styles/colors';
+import { ref, push, set, get } from "firebase/database";
+import colors from "../styles/colors";
 
 const CreatePost = () => {
   const [title, setTitle] = useState("");
@@ -18,36 +19,48 @@ const CreatePost = () => {
     });
 
     if (!result.canceled) {
-      const selectedImages = result.assets.map(asset => asset.uri);
+      const selectedImages = result.assets.map((asset) => asset.uri);
       setImages(selectedImages);
     }
   };
 
-  const handleSubmit = () => {
-    const userId = auth.currentUser.uid;
-    const newPostRef = db.ref('posts').push();
-    newPostRef.set({
-      title,
-      description,
-      images,
-      createdAt: Date.now(),
-      userId,
-      savedBy: {} // Inicializa vacío
-    })
-    .then(() => {
+  const handleSubmit = async () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    try {
+      // Obtener datos del usuario para agregar organización
+      const userRef = ref(db, `users/${currentUser.uid}`);
+      const userSnap = await get(userRef);
+      const userData = userSnap.val();
+      const organizacion = userData?.organizacion || "NO";
+
+      // Crear nuevo post
+      const newPostRef = push(ref(db, "posts"));
+      await set(newPostRef, {
+        title,
+        description,
+        images,
+        createdAt: Date.now(),
+        userId: currentUser.uid,
+        organizacion,
+        savedBy: {},
+      });
+
       alert("Post creado exitosamente!");
       setTitle("");
       setDescription("");
       setImages([]);
-    })
-    .catch((error) => {
-      console.error("Error creando el post: ", error);
-    });
+    } catch (error) {
+      console.error("Error creando el post:", error);
+      alert("Ocurrió un error al crear el post.");
+    }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Crear Publicación</Text>
+
       <TextInput
         style={styles.input}
         placeholder="Título"
@@ -63,14 +76,17 @@ const CreatePost = () => {
         onChangeText={setDescription}
         multiline
       />
+
       <TouchableOpacity style={styles.button} onPress={pickImages}>
         <Text style={styles.buttonText}>Seleccionar Imágenes</Text>
       </TouchableOpacity>
+
       <View style={styles.imagePreview}>
         {images.map((image, index) => (
           <Image key={index} source={{ uri: image }} style={styles.image} />
         ))}
       </View>
+
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitButtonText}>Publicar</Text>
       </TouchableOpacity>

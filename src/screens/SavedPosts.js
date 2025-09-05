@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet } from "react-native";
 import { db, auth } from "../firebase/config";
+import { ref, get } from "firebase/database";
 import Post from "../components/Post";
 import colors from "../styles/colors";
 
@@ -8,21 +9,32 @@ const SavedPosts = () => {
   const [savedPosts, setSavedPosts] = useState([]);
 
   useEffect(() => {
-    const userId = auth.currentUser.uid;
-    db.ref(`users/${userId}/savedPosts`).once('value', (snapshot) => {
-      const savedPostIds = snapshot.val() ? Object.keys(snapshot.val()) : [];
-      if (savedPostIds.length > 0) {
-        db.ref('posts').once('value', (postsSnap) => {
+    const fetchSavedPosts = async () => {
+      try {
+        const userId = auth.currentUser.uid;
+        const savedRef = ref(db, `users/${userId}/savedPosts`);
+        const savedSnap = await get(savedRef);
+        const savedPostIds = savedSnap.val() ? Object.keys(savedSnap.val()) : [];
+
+        if (savedPostIds.length > 0) {
+          const postsRef = ref(db, "posts");
+          const postsSnap = await get(postsRef);
           const allPosts = postsSnap.val() || {};
+
           const posts = savedPostIds
-            .map(id => ({ id, ...allPosts[id] }))
-            .filter(post => post.title); // filtra si el post existe
+            .map((id) => ({ id, ...allPosts[id] }))
+            .filter((post) => post && post.title); // filtra posts existentes
+
           setSavedPosts(posts);
-        });
-      } else {
-        setSavedPosts([]);
+        } else {
+          setSavedPosts([]);
+        }
+      } catch (error) {
+        console.error("Error al obtener posts guardados:", error);
       }
-    });
+    };
+
+    fetchSavedPosts();
   }, []);
 
   return (
@@ -49,11 +61,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    padding: 20,
   },
   title: {
     color: colors.textPrimary,
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 10,
   },
 });
 
