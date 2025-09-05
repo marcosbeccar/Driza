@@ -1,30 +1,52 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import { db, auth } from '../firebase/config';
+import { ref, onValue, set } from "firebase/database";
 import Post from '../components/Post';
-import colors from '../styles/colors'; 
+import colors from '../styles/colors';
 
 const MainPage = () => {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    const postsRef = db.ref('posts');
+    const postsRef = ref(db, 'posts');
+
     const handleData = (snapshot) => {
       const data = snapshot.val() || {};
-      // Convierte el objeto en array y ordena por createdAt descendente
       const fetchedPosts = Object.entries(data)
-        .map(([id, post]) => ({ id, ...post }))
-        .sort((a, b) => b.createdAt - a.createdAt);
+        .map(([id, post]) => ({
+          id,
+          ...post,
+          createdAt: post.createdAt || 0,
+          images: post.images || [],
+        }))
+        .sort((a, b) => b.createdAt - a.createdAt); // orden descendente por fecha
       setPosts(fetchedPosts);
     };
-    postsRef.on('value', handleData);
-    return () => postsRef.off('value', handleData);
+
+    const unsubscribe = onValue(postsRef, handleData, (error) => {
+      console.error('❌ Error al leer posts:', error);
+    });
+
+    return () => unsubscribe(); // cleanup
   }, []);
 
-  const handleSavePost = (postId) => {
-    const userId = auth.currentUser.uid;
-    db.ref(`users/${userId}/savedPosts/${postId}`).set(true);
-    db.ref(`posts/${postId}/savedBy/${userId}`).set(true);
+  const handleSavePost = async (postId) => {
+    const user = auth.currentUser;
+    if (!user) {
+      Alert.alert('Error', 'Debes iniciar sesión para guardar un post.');
+      return;
+    }
+
+    const userId = user.uid;
+
+    try {
+      await set(ref(db, `users/${userId}/savedPosts/${postId}`), true);
+      await set(ref(db, `posts/${postId}/savedBy/${userId}`), true);
+    } catch (error) {
+      console.error('❌ Error al guardar el post:', error);
+      Alert.alert('Error', 'No se pudo guardar el post. Intenta nuevamente.');
+    }
   };
 
   return (
@@ -51,11 +73,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  title: {
-    color: colors.textPrimary,
-    fontSize: 20,
-    fontWeight: 'bold',
   },
 });
 
