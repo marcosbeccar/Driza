@@ -7,6 +7,7 @@ import { View, Text } from "react-native";
 import AuthScreen from "./src/screens/AuthScreen";
 import TabNavigator from "./src/components/TabNavigator";
 import TermsScreen from "./src/screens/TermsScreen";
+import DetailPost from "./src/screens/DetailPost";
 
 const Stack = createNativeStackNavigator();
 
@@ -40,7 +41,10 @@ export default function App() {
             <Stack.Screen name="TermsScreen" component={TermsScreen} />
           </>
         ) : (
-          <Stack.Screen name="Main" component={TabNavigator} />
+          <>
+            <Stack.Screen name="Main" component={TabNavigator} />
+            <Stack.Screen name="DetailPost" component={DetailPost} />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
