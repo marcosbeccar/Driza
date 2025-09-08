@@ -1,8 +1,6 @@
 {
   "projects": {
-    "default": "driza-9870c",
-    "driza": "driza-9870c",
-    "drizacv": "drizacv"
+    "default": "drizacv"
   },
   "targets": {},
   "etags": {}
