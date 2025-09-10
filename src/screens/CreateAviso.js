@@ -1,3 +1,4 @@
+// filepath: src/screens/CreateAviso.js
 import React, { useState } from "react";
 import {
   View,
@@ -7,27 +8,26 @@ import {
   StyleSheet,
   Image,
   ScrollView,
-  Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { getDatabase, ref, push, set, get } from "firebase/database";
-import { auth, app } from "../firebase/config"; // asegúrate que config exporte `app` y `auth`
+import { auth, app } from "../firebase/config";
 import colors from "../styles/colors";
 
-const CreatePost = () => {
+const CreateAviso = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [phone, setPhone] = useState("");
   const [images, setImages] = useState([]);
-  const [categoria, setCategoria] = useState("normal"); // default
+  const [errorMessage, setErrorMessage] = useState("");
 
-  // DB modular
   const db = getDatabase(app);
 
   const pickImages = async () => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert("Permiso denegado", "Necesitamos permisos para acceder a las imágenes.");
+        setErrorMessage("Necesitamos permisos para acceder a las imágenes.");
         return;
       }
 
@@ -35,16 +35,20 @@ const CreatePost = () => {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsMultipleSelection: true,
         quality: 0.8,
-        selectionLimit: 15,
+        selectionLimit: 10, // máximo 10 imágenes
       });
 
       if (!result.canceled) {
         const selectedImages = result.assets.map((asset) => asset.uri);
-        setImages(selectedImages);
+        if (selectedImages.length + images.length > 10) {
+          setErrorMessage("No se pueden subir más de 10 imágenes en total.");
+          return;
+        }
+        setImages([...images, ...selectedImages]);
       }
     } catch (err) {
       console.error("Error pickImages:", err);
-      Alert.alert("Error", "No se pudieron seleccionar las imágenes.");
+      setErrorMessage("No se pudieron seleccionar las imágenes.");
     }
   };
 
@@ -52,43 +56,63 @@ const CreatePost = () => {
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) {
-        Alert.alert("Error", "Debes iniciar sesión para crear una publicación.");
+        setErrorMessage("Debes iniciar sesión para crear un aviso.");
         return;
       }
 
-      // Obtener organización del usuario (si existe)
+      if (!title.trim()) {
+        setErrorMessage("El título es obligatorio.");
+        return;
+      }
+      if (!description.trim()) {
+        setErrorMessage("La descripción es obligatoria.");
+        return;
+      }
+
       const userRef = ref(db, `users/${currentUser.uid}`);
       const userSnap = await get(userRef);
       const userData = userSnap.exists() ? userSnap.val() : null;
       const organizacion = userData?.organizacion || "NO";
 
-      // Crear nuevo post (modular)
-      const newPostRef = push(ref(db, "posts"));
-      await set(newPostRef, {
+      const newAvisoRef = push(ref(db, "avisos"));
+      await set(newAvisoRef, {
         title: title.trim(),
         description: description.trim(),
-        images: images,
-        categoria: categoria || "normal",
+        phone: phone.trim() || "", // opcional
+        email: currentUser.email,
+        images: images, // opcional
         createdAt: Date.now(),
         userId: currentUser.uid,
         organizacion,
-        savedBy: {},
+        estado: "normal", // por defecto
+        savedBy: {}, 
       });
 
-      Alert.alert("Éxito", "Post creado exitosamente!");
+      setErrorMessage("✅ Aviso publicado exitosamente!");
       setTitle("");
       setDescription("");
+      setPhone("");
       setImages([]);
-      setCategoria("normal");
     } catch (error) {
-      console.error("Error creando el post:", error);
-      Alert.alert("Error", "Ocurrió un error al crear el post.");
+      console.error("Error creando el aviso:", error);
+      setErrorMessage("Ocurrió un error al crear el aviso.");
     }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Crear Publicación</Text>
+      <Text style={styles.title}>Publicar Aviso</Text>
+
+      {errorMessage ? (
+        <Text
+          style={[
+            styles.message,
+            errorMessage.startsWith("✅") ? styles.success : styles.error,
+          ]}
+        >
+          {errorMessage}
+        </Text>
+      ) : null}
 
       <TextInput
         style={styles.input}
@@ -107,10 +131,17 @@ const CreatePost = () => {
         multiline
       />
 
-      {/* Si más adelante querés que el admin ponga otra categoría en la UI, se puede exponer aquí.
-          Por ahora lo dejamos en "normal" por defecto */}
+      <TextInput
+        style={styles.input}
+        placeholder="Teléfono / WhatsApp (opcional)"
+        placeholderTextColor={colors.textSecondary}
+        value={phone}
+        onChangeText={setPhone}
+        keyboardType="phone-pad"
+      />
+
       <TouchableOpacity style={styles.button} onPress={pickImages}>
-        <Text style={styles.buttonText}>Seleccionar Imágenes</Text>
+        <Text style={styles.buttonText}>Seleccionar Imágenes (opcional)</Text>
       </TouchableOpacity>
 
       <View style={styles.imagePreview}>
@@ -120,7 +151,7 @@ const CreatePost = () => {
       </View>
 
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitButtonText}>Publicar</Text>
+        <Text style={styles.submitButtonText}>Publicar Aviso</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -139,6 +170,18 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: 20,
     textAlign: "center",
+  },
+  message: {
+    fontSize: 16,
+    marginBottom: 15,
+    textAlign: "center",
+    fontWeight: "600",
+  },
+  error: {
+    color: "red",
+  },
+  success: {
+    color: "green",
   },
   input: {
     borderColor: colors.border,
@@ -194,4 +237,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CreatePost;
+export default CreateAviso;

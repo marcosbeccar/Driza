@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Image, Button, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import colors from "../styles/colors";
 
 const Post = ({
@@ -7,15 +7,22 @@ const Post = ({
   images = [],
   description,
   savedCount = 0,
+  isSaved = false,
   onSave,
-  onBuy,
   onPress,
 }) => {
-  const portada = images?.[0]; // mostrar solo la primera imagen como portada
+  const portada = images?.[0];
 
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
-      {portada && <Image source={{ uri: portada }} style={styles.image} />}
+      {portada ? (
+        <Image source={{ uri: portada }} style={styles.image} />
+      ) : (
+        <View style={[styles.image, styles.imagePlaceholder]}>
+          <Text style={styles.noImageText}>Sin imagen</Text>
+        </View>
+      )}
+
       <View style={styles.textContainer}>
         <Text style={styles.title} numberOfLines={1}>
           {title}
@@ -23,9 +30,18 @@ const Post = ({
         <Text style={styles.description} numberOfLines={2}>
           {description}
         </Text>
-        <Text style={styles.savedCount}>Guardado por {savedCount} usuario/s</Text>
-        {onSave && <Button title="Guardar" onPress={onSave} />}
-        {onBuy && <Button title="Buy" onPress={onBuy} />}
+        <Text style={styles.savedCount}>
+          Guardado por {savedCount} usuario/s
+        </Text>
+
+        {onSave && (
+          <TouchableOpacity
+            style={[styles.saveButton, isSaved ? styles.saved : styles.notSaved]}
+            onPress={onSave}
+          >
+            <Text style={styles.saveButtonText}>{isSaved ? "Desguardar" : "Guardar"}</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -45,29 +61,26 @@ const styles = StyleSheet.create({
     width: 200,
     overflow: "hidden",
   },
-  image: {
-    width: "100%",
-    height: 120,
+  image: { width: "100%", height: 120, borderRadius: 8 },
+  imagePlaceholder: {
+    backgroundColor: "#eee",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  textContainer: {
-    padding: 8,
+  noImageText: { color: colors.textSecondary, fontSize: 14 },
+  textContainer: { padding: 8 },
+  title: { fontSize: 16, fontWeight: "700", color: colors.textPrimary, marginBottom: 4 },
+  description: { fontSize: 14, color: colors.textSecondary, marginBottom: 4 },
+  savedCount: { fontSize: 12, color: "#228bfa", marginBottom: 4 },
+  saveButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignSelf: "flex-start",
   },
-  title: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.textPrimary,
-    marginBottom: 4,
-  },
-  description: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 4,
-  },
-  savedCount: {
-    fontSize: 12,
-    color: "#228bfa",
-    marginBottom: 4,
-  },
+  saved: { backgroundColor: "#e74c3c" },
+  notSaved: { backgroundColor: colors.primaryButton },
+  saveButtonText: { color: "#fff", fontWeight: "600", fontSize: 14 },
 });
 
 export default Post;

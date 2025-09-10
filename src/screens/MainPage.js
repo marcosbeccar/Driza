@@ -1,59 +1,72 @@
+// filepath: src/screens/MainPage.js
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { getDatabase, ref, onValue, query, orderByChild, update } from "firebase/database";
-import { app, auth } from "../firebase/config";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
+import {
+  getDatabase,
+  ref,
+  onValue,
+  query,
+  orderByChild,
+} from "firebase/database";
+import { app } from "../firebase/config";
 import colors from "../styles/colors";
 import Post from "../components/Post";
-import { useNavigation } from "@react-navigation/native";
 
-const MainPage = () => {
-  const [posts, setPosts] = useState([]);
+const MainPage = ({ navigation }) => {
+  const [products, setProducts] = useState([]);
   const db = getDatabase(app);
-  const navigation = useNavigation();
 
   useEffect(() => {
-    const postsRef = query(ref(db, "posts"), orderByChild("createdAt"));
+    const productsRef = query(ref(db, "products"), orderByChild("createdAt"));
 
-    const unsubscribe = onValue(postsRef, (snapshot) => {
+    const unsubscribe = onValue(productsRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        const loadedPosts = Object.keys(data)
+        const loadedProducts = Object.keys(data)
           .map((key) => ({ id: key, ...data[key] }))
           .sort((a, b) => b.createdAt - a.createdAt); // más nuevos primero
-        setPosts(loadedPosts);
+        setProducts(loadedProducts);
       } else {
-        setPosts([]);
+        setProducts([]);
       }
     });
 
     return () => unsubscribe();
   }, []);
 
-  const handleSavePost = async (postId) => {
-    const userId = auth.currentUser.uid;
-    await update(ref(db, `users/${userId}/savedPosts`), { [postId]: true });
-    await update(ref(db, `posts/${postId}/savedBy`), { [userId]: true });
+  const handleSaveProduct = async (productId) => {
+    // implementar guardado si es necesario
   };
 
-  // Filtrar por categoría
-  const promocionados = posts.filter((p) => p.categoria === "promocionado");
-  const normales = posts.filter((p) => !p.categoria || p.categoria === "normal");
+  // Separar por estado
+  const promocionados = products.filter((p) => p.estado === "promocionado");
+  const normales = products.filter((p) => !p.estado || p.estado === "normal");
 
   // Distribuir normales en 3 filas
   const normalRows = [[], [], []];
-  normales.forEach((post, idx) => normalRows[idx % 3].push(post));
+  normales.forEach((product, idx) => {
+    normalRows[idx % 3].push(product);
+  });
 
   const renderHorizontalRow = (data) => (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      {data.map((post) => (
+      {data.map((product) => (
         <Post
-          key={post.id}
-          title={post.title}
-          images={post.images}
-          description={post.description}
-          savedCount={post.savedBy ? Object.keys(post.savedBy).length : 0}
-          onSave={() => handleSavePost(post.id)}
-          onPress={() => navigation.navigate("DetailPost", { postId: post.id })}
+          key={product.id}
+          title={product.title}
+          images={product.images}
+          description={product.description}
+          savedCount={product.savedBy ? Object.keys(product.savedBy).length : 0}
+          onSave={() => handleSaveProduct(product.id)}
+          onPress={() =>
+            navigation.navigate("DetailPost", { postId: product.id })
+          }
         />
       ))}
     </ScrollView>
@@ -74,6 +87,15 @@ const MainPage = () => {
           {renderHorizontalRow(row)}
         </View>
       ))}
+
+      <TouchableOpacity
+        onPress={() => navigation.navigate("AvisosPage")}
+        style={styles.linkContainer}
+      >
+        <Text style={styles.linkText}>
+          ¿Buscabas ver los avisos? Click acá
+        </Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -93,6 +115,16 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginHorizontal: 10,
     marginBottom: 10,
+  },
+  linkContainer: {
+    marginVertical: 20,
+    alignItems: "center",
+  },
+  linkText: {
+    fontSize: 16,
+    color: colors.primaryButton,
+    fontWeight: "600",
+    textDecorationLine: "underline",
   },
 });
 
