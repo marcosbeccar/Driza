@@ -8,16 +8,16 @@ import {
   StyleSheet,
   ScrollView,
   useWindowDimensions,
-  Button,
 } from "react-native";
 import { getDatabase, ref, get, update } from "firebase/database";
 import { auth, app } from "../firebase/config";
 import colors from "../styles/colors";
+import { MaterialIcons } from '@expo/vector-icons'; // ícono de guardar
 
 const db = getDatabase(app);
 
 const DetailPost = ({ route, navigation }) => {
-  const { postId, type = "products" } = route.params; // type: "products" o "avisos"
+  const { postId, tipo = "products" } = route.params; // "products" o "avisos"
   const [post, setPost] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { width } = useWindowDimensions();
@@ -26,19 +26,21 @@ const DetailPost = ({ route, navigation }) => {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const postSnap = await get(ref(db, `${type}/${postId}`));
+        const postSnap = await get(ref(db, `${tipo}/${postId}`));
         if (postSnap.exists()) setPost(postSnap.val());
       } catch (error) {
         console.error("Error al cargar la publicación:", error);
       }
     };
     fetchPost();
-  }, [postId, type]);
+  }, [postId, tipo]);
 
   if (!post) return <Text style={styles.loading}>Cargando...</Text>;
 
   const images = post.images || [];
-  const savedCount = post.savedBy ? Object.keys(post.savedBy).length : 0;
+  const savedBy = post.savedBy || {};
+  const isSaved = !!savedBy[auth.currentUser.uid];
+  const savedCount = Object.keys(savedBy).length;
 
   const nextImage = () => {
     if (images.length > 0)
@@ -52,19 +54,26 @@ const DetailPost = ({ route, navigation }) => {
 
   const handleSave = async () => {
     try {
-      const user = auth.currentUser;
-      if (!user) return;
+      const userId = auth.currentUser.uid;
+      const postRef = ref(db, `${tipo}/${postId}`);
+      const snapshot = await get(postRef);
+      if (!snapshot.exists()) return;
 
-      const postRef = ref(db, `${type}/${postId}/savedBy/${user.uid}`);
-      await update(postRef, true);
+      const postData = snapshot.val();
+      const updatedSavedBy = postData.savedBy || {};
 
-      // Refrescar localmente
-      setPost((prev) => ({
-        ...prev,
-        savedBy: { ...prev.savedBy, [user.uid]: true },
-      }));
+      if (updatedSavedBy[userId]) {
+        delete updatedSavedBy[userId];
+        await update(ref(db, `users/${userId}/savedPosts`), { [postId]: null });
+      } else {
+        updatedSavedBy[userId] = true;
+        await update(ref(db, `users/${userId}/savedPosts`), { [postId]: tipo });
+      }
+
+      await update(postRef, { savedBy: updatedSavedBy });
+      setPost((prev) => ({ ...prev, savedBy: updatedSavedBy }));
     } catch (err) {
-      console.error("Error guardando:", err);
+      console.error("Error al guardar/desguardar:", err);
     }
   };
 
@@ -131,8 +140,16 @@ const DetailPost = ({ route, navigation }) => {
             </Text>
           )}
 
-          <View style={{ marginTop: 10 }}>
-            <Button title={`Guardar (${savedCount})`} onPress={handleSave} />
+          {/* Ícono de guardar */}
+          <View style={styles.saveContainer}>
+            <TouchableOpacity onPress={handleSave}>
+              <MaterialIcons
+                name={isSaved ? "bookmark" : "bookmark-border"}
+                size={32}
+                color={isSaved ? "#05383a" : "#888"} // verde si está guardado, gris si no
+              />
+            </TouchableOpacity>
+            <Text style={styles.savedCount}>{savedCount} usuario/s</Text>
           </View>
         </View>
       </View>
@@ -209,6 +226,16 @@ const styles = StyleSheet.create({
   authorTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 5, color: colors.textPrimary },
   authorText: { fontSize: 14, color: colors.textSecondary, marginBottom: 3 },
   warning: { color: "red", fontWeight: "bold", fontSize: 14, marginTop: 10 },
+  saveContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 12,
+    gap: 10,
+  },
+  savedCount: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
 });
 
 export default DetailPost;

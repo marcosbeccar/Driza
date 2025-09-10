@@ -1,8 +1,10 @@
+// filepath: src/screens/Profile.js
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from "react-native-web";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, useWindowDimensions } from "react-native";
 import { auth, db } from "../firebase/config";
-import { ref, get, onValue, remove } from "firebase/database";
+import { ref, onValue, remove, get } from "firebase/database";
 import Post from "../components/Post";
+import AvisoCard from "../components/AvisoCard";
 import colors from "../styles/colors";
 import { useNavigation } from "@react-navigation/native";
 
@@ -10,8 +12,17 @@ const Profile = () => {
   const navigation = useNavigation();
   const [userName, setUserName] = useState("Usuario");
   const [email, setEmail] = useState("");
-  const [posts, setPosts] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [avisos, setAvisos] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const { width } = useWindowDimensions();
+  const isLargeScreen = width > 800;
+  const cardContainerStyle = {
+    width: isLargeScreen ? 700 : "95%",
+    alignSelf: "center",
+    marginBottom: 20,
+  };
 
   useEffect(() => {
     const currentUser = auth.currentUser;
@@ -19,7 +30,6 @@ const Profile = () => {
 
     setEmail(currentUser.email);
 
-    // Obtener datos del usuario
     const userRef = ref(db, `users/${currentUser.uid}`);
     get(userRef).then((snapshot) => {
       const userData = snapshot.val();
@@ -28,19 +38,32 @@ const Profile = () => {
       }
     });
 
-    // Obtener posts del usuario
-    const postsRef = ref(db, "posts");
-    const unsubscribe = onValue(postsRef, (snapshot) => {
-      const allPosts = snapshot.val() || {};
-      const userPosts = Object.entries(allPosts)
-        .filter(([id, post]) => post.userId === currentUser.uid)
+    const productsRef = ref(db, "products");
+    const unsubProducts = onValue(productsRef, (snapshot) => {
+      const all = snapshot.val() || {};
+      const userProducts = Object.entries(all)
+        .filter(([_, post]) => post.userId === currentUser.uid)
         .map(([id, post]) => ({ id, ...post }))
-        .sort((a, b) => b.createdAt - a.createdAt); // orden descendente por fecha
-      setPosts(userPosts);
+        .sort((a, b) => b.createdAt - a.createdAt);
+      setProducts(userProducts);
       setLoading(false);
     });
 
-    return () => unsubscribe(); // cleanup listener
+    const avisosRef = ref(db, "avisos");
+    const unsubAvisos = onValue(avisosRef, (snapshot) => {
+      const all = snapshot.val() || {};
+      const userAvisos = Object.entries(all)
+        .filter(([_, aviso]) => aviso.userId === currentUser.uid)
+        .map(([id, aviso]) => ({ id, ...aviso }))
+        .sort((a, b) => b.createdAt - a.createdAt);
+      setAvisos(userAvisos);
+      setLoading(false);
+    });
+
+    return () => {
+      unsubProducts();
+      unsubAvisos();
+    };
   }, []);
 
   const handleLogout = () => {
@@ -49,15 +72,19 @@ const Profile = () => {
     });
   };
 
-  const deletePost = (postId) => {
-    const postRef = ref(db, `posts/${postId}`);
-    remove(postRef).then(() => {
-      setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
+  const deleteItem = (id, tipo) => {
+    const itemRef = ref(db, `${tipo}/${id}`);
+    remove(itemRef).then(() => {
+      if (tipo === "products") {
+        setProducts((prev) => prev.filter((p) => p.id !== id));
+      } else if (tipo === "avisos") {
+        setAvisos((prev) => prev.filter((a) => a.id !== id));
+      }
     });
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.title}>Perfil de {userName}</Text>
       <Text style={styles.email}>Email: {email}</Text>
 
@@ -65,41 +92,73 @@ const Profile = () => {
         <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
       </TouchableOpacity>
 
-      <Text style={styles.subtitle}>Tus Posts:</Text>
-
       {loading ? (
-        <Text>Cargando...</Text>
+        <Text style={styles.loading}>Cargando...</Text>
       ) : (
-        <FlatList
-          data={posts}
-          keyExtractor={(post) => post.id}
-          renderItem={({ item }) => (
-            <View style={styles.postContainer}>
-              <Post
-                title={item.title}
-                images={item.images}
-                description={item.description}
-                savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
-                postId={item.id}
-              />
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => deletePost(item.id)}
-              >
-                <Text style={styles.deleteButtonText}>Eliminar</Text>
-              </TouchableOpacity>
-            </View>
+        <>
+          {/* Productos */}
+          {products.length > 0 && (
+            <>
+              <Text style={styles.subtitle}>Tus Productos</Text>
+              {products.map((item) => (
+                <View key={item.id} style={cardContainerStyle}>
+                  <Post
+                    title={item.title}
+                    images={item.images}
+                    description={item.description}
+                    savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
+                    postId={item.id}
+                  />
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => deleteItem(item.id, "products")}
+                  >
+                    <Text style={styles.deleteButtonText}>Eliminar</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </>
           )}
-        />
+
+          {/* Divider */}
+          {products.length > 0 && avisos.length > 0 && (
+            <View style={styles.divider} />
+          )}
+
+          {/* Avisos */}
+          {avisos.length > 0 && (
+            <>
+              <Text style={styles.subtitle}>Tus Avisos</Text>
+              {avisos.map((item) => (
+                <View key={item.id} style={cardContainerStyle}>
+                  <AvisoCard
+                    title={item.title}
+                    description={item.description}
+                    date={new Date(item.createdAt).toLocaleString()}
+                    savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
+                    isSaved={!!item.savedBy?.[auth.currentUser.uid]}
+                    onSave={() => {}}
+                  />
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => deleteItem(item.id, "avisos")}
+                  >
+                    <Text style={styles.deleteButtonText}>Eliminar</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </>
+          )}
+        </>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingVertical: 20,
     backgroundColor: colors.background,
   },
   title: {
@@ -121,6 +180,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     marginTop: 20,
+    marginBottom: 30,
+    marginHorizontal: 20,
   },
   logoutButtonText: {
     color: "#ffffff",
@@ -128,13 +189,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   subtitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#4a90e2",
-    marginBottom: 10,
-  },
-  postContainer: {
-    marginBottom: 20,
+    fontSize: 20,
+    fontWeight: "bold",
+    color: colors.textPrimary,
+    marginBottom: 12,
+    marginTop: 10,
+    marginHorizontal: 20,
   },
   deleteButton: {
     backgroundColor: "#e74c3c",
@@ -149,9 +209,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-  text: {
-    color: colors.textPrimary,
+  divider: {
+    height: 1,
+    backgroundColor: "#ccc",
+    marginVertical: 20,
+    marginHorizontal: 20,
+  },
+  loading: {
+    textAlign: "center",
+    marginTop: 50,
     fontSize: 16,
+    color: colors.textSecondary,
   },
 });
 

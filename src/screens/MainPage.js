@@ -13,8 +13,10 @@ import {
   onValue,
   query,
   orderByChild,
+  get,
+  update,
 } from "firebase/database";
-import { app } from "../firebase/config";
+import { app, auth } from "../firebase/config";
 import colors from "../styles/colors";
 import Post from "../components/Post";
 
@@ -41,7 +43,40 @@ const MainPage = ({ navigation }) => {
   }, []);
 
   const handleSaveProduct = async (productId) => {
-    // implementar guardado si es necesario
+    try {
+      const userId = auth.currentUser.uid;
+      const productRef = ref(db, `products/${productId}`);
+      const snapshot = await get(productRef);
+
+      if (!snapshot.exists()) return;
+      const productData = snapshot.val();
+      const savedBy = productData.savedBy || {};
+
+      if (savedBy[userId]) {
+        // Si ya estaba guardado -> desguardar
+        delete savedBy[userId];
+        await update(ref(db, `users/${userId}/savedPosts`), {
+          [productId]: null,
+        });
+      } else {
+        // Guardar
+        savedBy[userId] = true;
+        await update(ref(db, `users/${userId}/savedPosts`), {
+          [productId]: "products",
+        });
+      }
+
+      await update(productRef, { savedBy });
+
+      // actualizar localmente el estado
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === productId ? { ...p, savedBy } : p
+        )
+      );
+    } catch (err) {
+      console.error("Error al guardar/desguardar producto:", err);
+    }
   };
 
   // Separar por estado
@@ -63,6 +98,7 @@ const MainPage = ({ navigation }) => {
           images={product.images}
           description={product.description}
           savedCount={product.savedBy ? Object.keys(product.savedBy).length : 0}
+          isSaved={!!product.savedBy?.[auth.currentUser.uid]}
           onSave={() => handleSaveProduct(product.id)}
           onPress={() =>
             navigation.navigate("DetailPost", { postId: product.id })

@@ -1,16 +1,18 @@
 // filepath: src/screens/AvisosPage.js
 import React, { useEffect, useState } from "react";
+import { ScrollView, Text, StyleSheet } from "react-native";
 import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
-import { getDatabase, ref, onValue, query, orderByChild } from "firebase/database";
-import { app } from "../firebase/config";
+  getDatabase,
+  ref,
+  onValue,
+  query,
+  orderByChild,
+  get,
+  update,
+} from "firebase/database";
+import { app, auth } from "../firebase/config";
 import colors from "../styles/colors";
-import Post from "../components/Post"; // Reutilizamos el componente Post, pero no mostramos las imágenes en la lista
+import AvisoCard from "../components/AvisoCard";
 
 const AvisosPage = ({ navigation }) => {
   const [avisos, setAvisos] = useState([]);
@@ -34,26 +36,57 @@ const AvisosPage = ({ navigation }) => {
     return () => unsubscribe();
   }, []);
 
+  const handleSaveAviso = async (avisoId) => {
+    try {
+      const userId = auth.currentUser.uid;
+      const avisoRef = ref(db, `avisos/${avisoId}`);
+      const snapshot = await get(avisoRef);
+      if (!snapshot.exists()) return;
+
+      const avisoData = snapshot.val();
+      const savedBy = avisoData.savedBy || {};
+
+      if (savedBy[userId]) {
+        delete savedBy[userId];
+        await update(ref(db, `users/${userId}/savedPosts`), {
+          [avisoId]: null,
+        });
+      } else {
+        savedBy[userId] = true;
+        await update(ref(db, `users/${userId}/savedPosts`), {
+          [avisoId]: "avisos",
+        });
+      }
+
+      await update(avisoRef, { savedBy });
+
+      // actualizar estado local
+      setAvisos((prev) =>
+        prev.map((a) => (a.id === avisoId ? { ...a, savedBy } : a))
+      );
+    } catch (err) {
+      console.error("Error al guardar/desguardar aviso:", err);
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       {avisos.length === 0 ? (
         <Text style={styles.emptyText}>No hay avisos publicados aún.</Text>
       ) : (
         avisos.map((aviso) => (
-          <TouchableOpacity
+          <AvisoCard
             key={aviso.id}
+            title={aviso.title}
+            description={aviso.description}
+            date={new Date(aviso.createdAt).toLocaleString()}
+            savedCount={aviso.savedBy ? Object.keys(aviso.savedBy).length : 0}
+            isSaved={!!aviso.savedBy?.[auth.currentUser.uid]}
+            onSave={() => handleSaveAviso(aviso.id)}
             onPress={() =>
-              navigation.navigate("DetailAviso", { avisoId: aviso.id })
+              navigation.navigate("DetailPost", { postId: aviso.id, tipo: "avisos" })
             }
-          >
-            <View style={styles.card}>
-              <Text style={styles.title}>{aviso.title}</Text>
-              <Text style={styles.description}>{aviso.description}</Text>
-              <Text style={styles.date}>
-                Publicado: {new Date(aviso.createdAt).toLocaleString()}
-              </Text>
-            </View>
-          </TouchableOpacity>
+          />
         ))
       )}
     </ScrollView>
@@ -65,33 +98,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     backgroundColor: colors.background,
-  },
-  card: {
-    backgroundColor: "#fff",
-    padding: 15,
-    marginHorizontal: 10,
-    marginBottom: 12,
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: colors.textPrimary,
-    marginBottom: 5,
-  },
-  description: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 5,
-  },
-  date: {
-    fontSize: 12,
-    color: colors.textSecondary,
   },
   emptyText: {
     fontSize: 16,
