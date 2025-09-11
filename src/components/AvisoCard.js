@@ -14,7 +14,7 @@ const AvisoCard = ({
   onPress,
 }) => {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
       <View style={{ flex: 1 }}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.description} numberOfLines={2}>
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     color: "#228bfa",
     marginTop: 4,
   },
-  iconButton: { padding: 4 },
+  iconButton: { padding: 4, alignSelf: "flex-start" },
 });
 
 export default AvisoCard;

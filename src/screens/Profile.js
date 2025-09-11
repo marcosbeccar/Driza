@@ -1,8 +1,15 @@
 // filepath: src/screens/Profile.js
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, useWindowDimensions } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  useWindowDimensions,
+} from "react-native";
 import { auth, db } from "../firebase/config";
-import { ref, onValue, remove, get } from "firebase/database";
+import { ref, onValue, remove, get, update } from "firebase/database";
 import Post from "../components/Post";
 import AvisoCard from "../components/AvisoCard";
 import colors from "../styles/colors";
@@ -17,9 +24,10 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
 
   const { width } = useWindowDimensions();
-  const isLargeScreen = width > 800;
+  const isLargeScreen = width >= 1024;
+  const isTablet = width >= 768 && width < 1024;
   const cardContainerStyle = {
-    width: isLargeScreen ? 700 : "95%",
+    width: isLargeScreen ? "60%" : isTablet ? "80%" : "95%",
     alignSelf: "center",
     marginBottom: 20,
   };
@@ -83,6 +91,47 @@ const Profile = () => {
     });
   };
 
+  const handleSave = async (id, tipo) => {
+    try {
+      const userId = auth.currentUser.uid;
+      const itemRef = ref(db, `${tipo}/${id}`);
+      const snapshot = await get(itemRef);
+
+      if (!snapshot.exists()) return;
+      const itemData = snapshot.val();
+      const savedBy = itemData.savedBy || {};
+
+      if (savedBy[userId]) {
+        // desguardar
+        delete savedBy[userId];
+        await update(ref(db, `users/${userId}/savedPosts`), {
+          [id]: null,
+        });
+      } else {
+        // guardar
+        savedBy[userId] = true;
+        await update(ref(db, `users/${userId}/savedPosts`), {
+          [id]: tipo,
+        });
+      }
+
+      await update(itemRef, { savedBy });
+
+      // actualizar local
+      if (tipo === "products") {
+        setProducts((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, savedBy } : p))
+        );
+      } else {
+        setAvisos((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, savedBy } : a))
+        );
+      }
+    } catch (err) {
+      console.error("Error al guardar/desguardar:", err);
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Perfil de {userName}</Text>
@@ -102,13 +151,26 @@ const Profile = () => {
               <Text style={styles.subtitle}>Tus Productos</Text>
               {products.map((item) => (
                 <View key={item.id} style={cardContainerStyle}>
-                  <Post
-                    title={item.title}
-                    images={item.images}
-                    description={item.description}
-                    savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
-                    postId={item.id}
-                  />
+                  <TouchableOpacity
+                    onPress={() =>
+                      navigation.navigate("DetailPost", {
+                        postId: item.id,
+                        type: "products",
+                      })
+                    }
+                  >
+                    <Post
+                      title={item.title}
+                      images={item.images}
+                      description={item.description}
+                      savedCount={
+                        item.savedBy ? Object.keys(item.savedBy).length : 0
+                      }
+                      isSaved={!!item.savedBy?.[auth.currentUser?.uid]}
+                      onSave={() => handleSave(item.id, "products")}
+                      postId={item.id}
+                    />
+                  </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.deleteButton}
                     onPress={() => deleteItem(item.id, "products")}
@@ -131,14 +193,25 @@ const Profile = () => {
               <Text style={styles.subtitle}>Tus Avisos</Text>
               {avisos.map((item) => (
                 <View key={item.id} style={cardContainerStyle}>
-                  <AvisoCard
-                    title={item.title}
-                    description={item.description}
-                    date={new Date(item.createdAt).toLocaleString()}
-                    savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
-                    isSaved={!!item.savedBy?.[auth.currentUser.uid]}
-                    onSave={() => {}}
-                  />
+                  <TouchableOpacity
+                    onPress={() =>
+                      navigation.navigate("DetailPost", {
+                        postId: item.id,
+                        type: "avisos",
+                      })
+                    }
+                  >
+                    <AvisoCard
+                      title={item.title}
+                      description={item.description}
+                      date={new Date(item.createdAt).toLocaleString()}
+                      savedCount={
+                        item.savedBy ? Object.keys(item.savedBy).length : 0
+                      }
+                      isSaved={!!item.savedBy?.[auth.currentUser?.uid]}
+                      onSave={() => handleSave(item.id, "avisos")}
+                    />
+                  </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.deleteButton}
                     onPress={() => deleteItem(item.id, "avisos")}
@@ -162,7 +235,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
     color: "#228bfa",
     textAlign: "center",
@@ -189,7 +262,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   subtitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
     color: colors.textPrimary,
     marginBottom: 12,

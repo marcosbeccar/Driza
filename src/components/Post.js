@@ -16,7 +16,7 @@ const Post = ({
   const portada = images?.[0];
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
+    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
       {portada ? (
         <Image source={{ uri: portada }} style={styles.image} />
       ) : (
@@ -26,8 +26,12 @@ const Post = ({
       )}
 
       <View style={styles.textContainer}>
-        <Text style={styles.title} numberOfLines={1}>{title}</Text>
-        <Text style={styles.description} numberOfLines={2}>{description}</Text>
+        <Text style={styles.title} numberOfLines={1}>
+          {title}
+        </Text>
+        <Text style={styles.description} numberOfLines={2}>
+          {description}
+        </Text>
         <Text style={styles.savedCount}>
           Guardado por {savedCount} usuario/s
         </Text>
@@ -70,10 +74,15 @@ const styles = StyleSheet.create({
   },
   noImageText: { color: colors.textSecondary, fontSize: 14 },
   textContainer: { flex: 1, padding: 8, justifyContent: "center" },
-  title: { fontSize: 16, fontWeight: "700", color: colors.textPrimary, marginBottom: 4 },
+  title: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.textPrimary,
+    marginBottom: 4,
+  },
   description: { fontSize: 14, color: colors.textSecondary, marginBottom: 4 },
   savedCount: { fontSize: 12, color: "#228bfa", marginBottom: 8 },
-  iconButton: { padding: 4 },
+  iconButton: { padding: 4, alignSelf: "flex-start" },
 });
 
 export default Post;
