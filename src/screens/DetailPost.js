@@ -12,7 +12,7 @@ import {
 import { getDatabase, ref, get, update } from "firebase/database";
 import { auth, app } from "../firebase/config";
 import colors from "../styles/colors";
-import { MaterialIcons } from '@expo/vector-icons'; // ícono de guardar
+import { MaterialIcons } from "@expo/vector-icons"; // ícono de guardar
 
 const db = getDatabase(app);
 
@@ -27,7 +27,9 @@ const DetailPost = ({ route, navigation }) => {
     const fetchPost = async () => {
       try {
         const postSnap = await get(ref(db, `${tipo}/${postId}`));
-        if (postSnap.exists()) setPost(postSnap.val());
+        if (postSnap.exists()) {
+          setPost(postSnap.val());
+        }
       } catch (error) {
         console.error("Error al cargar la publicación:", error);
       }
@@ -49,7 +51,9 @@ const DetailPost = ({ route, navigation }) => {
 
   const prevImage = () => {
     if (images.length > 0)
-      setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+      setCurrentImageIndex((prev) =>
+        prev === 0 ? images.length - 1 : prev - 1
+      );
   };
 
   const handleSave = async () => {
@@ -123,18 +127,31 @@ const DetailPost = ({ route, navigation }) => {
         )}
 
         {/* Texto y datos */}
-        <View style={[styles.textSection, isLargeScreen && styles.textSectionLarge]}>
+        <View
+          style={[styles.textSection, isLargeScreen && styles.textSectionLarge]}
+        >
           <Text style={styles.title}>{post.title}</Text>
           <Text style={styles.description}>{post.description}</Text>
-          {post.createdAt && <Text style={styles.date}>Publicado: {formattedDate}</Text>}
+          {post.createdAt && (
+            <Text style={styles.date}>Publicado: {formattedDate}</Text>
+          )}
 
           <View style={styles.authorBox}>
             <Text style={styles.authorTitle}>Datos del autor</Text>
-            {post.authorEmail && <Text style={styles.authorText}>📧 {post.authorEmail}</Text>}
-            {post.authorPhone && <Text style={styles.authorText}>📱 {post.authorPhone}</Text>}
+            {post.email && (
+              <Text style={styles.authorText}>📧 {post.email}</Text>
+            )}
+            {/* Productos: siempre mostrar phone */}
+            {tipo === "products" && post.phone && (
+              <Text style={styles.authorText}>📱 {post.phone}</Text>
+            )}
+            {/* Avisos: mostrar phone solo si existe */}
+            {tipo === "avisos" && post.phone && (
+              <Text style={styles.authorText}>📱 {post.phone}</Text>
+            )}
           </View>
 
-          {post.authorOrg === "NO" && (
+          {post.organizacion === "NO" && (
             <Text style={styles.warning}>
               ⚠️ El autor de esta publicación no pertenece a la organización
             </Text>
@@ -146,7 +163,7 @@ const DetailPost = ({ route, navigation }) => {
               <MaterialIcons
                 name={isSaved ? "bookmark" : "bookmark-border"}
                 size={32}
-                color={isSaved ? "#05383a" : "#888"} // verde si está guardado, gris si no
+                color={isSaved ? "#05383a" : "#888"}
               />
             </TouchableOpacity>
             <Text style={styles.savedCount}>{savedCount} usuario/s</Text>
@@ -219,11 +236,26 @@ const styles = StyleSheet.create({
   },
   textSection: { marginTop: 15 },
   textSectionLarge: { flex: 1, marginTop: 0 },
-  title: { fontSize: 26, fontWeight: "bold", marginBottom: 15, color: colors.textPrimary },
+  title: {
+    fontSize: 26,
+    fontWeight: "bold",
+    marginBottom: 15,
+    color: colors.textPrimary,
+  },
   description: { fontSize: 16, color: colors.textSecondary, marginBottom: 10 },
   date: { fontSize: 14, color: colors.textSecondary, marginBottom: 10 },
-  authorBox: { marginTop: 15, padding: 10, borderRadius: 8, backgroundColor: "#f9f9f9" },
-  authorTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 5, color: colors.textPrimary },
+  authorBox: {
+    marginTop: 15,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: "#f9f9f9",
+  },
+  authorTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 5,
+    color: colors.textPrimary,
+  },
   authorText: { fontSize: 14, color: colors.textSecondary, marginBottom: 3 },
   warning: { color: "red", fontWeight: "bold", fontSize: 14, marginTop: 10 },
   saveContainer: {

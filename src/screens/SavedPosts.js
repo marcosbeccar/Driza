@@ -6,11 +6,13 @@ import { ref, onValue, get, update } from "firebase/database";
 import Post from "../components/Post";
 import AvisoCard from "../components/AvisoCard";
 import colors from "../styles/colors";
+import { useNavigation } from "@react-navigation/native";
 
 const SavedPosts = () => {
   const [savedProducts, setSavedProducts] = useState([]);
   const [savedAvisos, setSavedAvisos] = useState([]);
   const { width } = useWindowDimensions();
+  const navigation = useNavigation();
 
   const isLargeScreen = width > 800;
   const cardContainerStyle = {
@@ -86,6 +88,12 @@ const SavedPosts = () => {
                 savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
                 isSaved={!!item.savedBy?.[auth.currentUser.uid]}
                 onSave={() => toggleSave(item.id, item.tipo)}
+                onPress={() =>
+                  navigation.navigate("DetailPost", {
+                    postId: item.id,
+                    tipo: "products",
+                  })
+                }
               />
             </View>
           ))}
@@ -110,6 +118,12 @@ const SavedPosts = () => {
                 savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
                 isSaved={!!item.savedBy?.[auth.currentUser.uid]}
                 onSave={() => toggleSave(item.id, item.tipo)}
+                onPress={() =>
+                  navigation.navigate("DetailPost", {
+                    postId: item.id,
+                    tipo: "avisos",
+                  })
+                }
               />
             </View>
           ))}

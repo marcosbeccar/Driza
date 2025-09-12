@@ -76,7 +76,7 @@ const Profile = () => {
 
   const handleLogout = () => {
     auth.signOut().then(() => {
-      navigation.navigate("Login");
+      navigation.navigate("Auth");
     });
   };
 
@@ -151,26 +151,22 @@ const Profile = () => {
               <Text style={styles.subtitle}>Tus Productos</Text>
               {products.map((item) => (
                 <View key={item.id} style={cardContainerStyle}>
-                  <TouchableOpacity
+                  <Post
+                    title={item.title}
+                    images={item.images}
+                    description={item.description}
+                    savedCount={
+                      item.savedBy ? Object.keys(item.savedBy).length : 0
+                    }
+                    isSaved={!!item.savedBy?.[auth.currentUser?.uid]}
+                    onSave={() => handleSave(item.id, "products")}
                     onPress={() =>
                       navigation.navigate("DetailPost", {
                         postId: item.id,
-                        type: "products",
+                        tipo: "products",
                       })
                     }
-                  >
-                    <Post
-                      title={item.title}
-                      images={item.images}
-                      description={item.description}
-                      savedCount={
-                        item.savedBy ? Object.keys(item.savedBy).length : 0
-                      }
-                      isSaved={!!item.savedBy?.[auth.currentUser?.uid]}
-                      onSave={() => handleSave(item.id, "products")}
-                      postId={item.id}
-                    />
-                  </TouchableOpacity>
+                  />
                   <TouchableOpacity
                     style={styles.deleteButton}
                     onPress={() => deleteItem(item.id, "products")}
@@ -193,25 +189,22 @@ const Profile = () => {
               <Text style={styles.subtitle}>Tus Avisos</Text>
               {avisos.map((item) => (
                 <View key={item.id} style={cardContainerStyle}>
-                  <TouchableOpacity
+                  <AvisoCard
+                    title={item.title}
+                    description={item.description}
+                    date={new Date(item.createdAt).toLocaleString()}
+                    savedCount={
+                      item.savedBy ? Object.keys(item.savedBy).length : 0
+                    }
+                    isSaved={!!item.savedBy?.[auth.currentUser?.uid]}
+                    onSave={() => handleSave(item.id, "avisos")}
                     onPress={() =>
                       navigation.navigate("DetailPost", {
                         postId: item.id,
-                        type: "avisos",
+                        tipo: "avisos",
                       })
                     }
-                  >
-                    <AvisoCard
-                      title={item.title}
-                      description={item.description}
-                      date={new Date(item.createdAt).toLocaleString()}
-                      savedCount={
-                        item.savedBy ? Object.keys(item.savedBy).length : 0
-                      }
-                      isSaved={!!item.savedBy?.[auth.currentUser?.uid]}
-                      onSave={() => handleSave(item.id, "avisos")}
-                    />
-                  </TouchableOpacity>
+                  />
                   <TouchableOpacity
                     style={styles.deleteButton}
                     onPress={() => deleteItem(item.id, "avisos")}

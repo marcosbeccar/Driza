@@ -125,7 +125,7 @@ const MainPage = ({ navigation }) => {
       ))}
 
       <TouchableOpacity
-        onPress={() => navigation.navigate("AvisosPage")}
+        onPress={() => navigation.navigate("Avisos")}
         style={styles.linkContainer}
       >
         <Text style={styles.linkText}>
