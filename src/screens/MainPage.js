@@ -1,49 +1,38 @@
 // filepath: src/screens/MainPage.js
 import React, { useEffect, useState, useRef } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-  Platform,
-} from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
-import {
-  getDatabase,
-  ref,
-  onValue,
-  query,
-  orderByChild,
-  get,
-  update,
-} from "firebase/database";
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
+import { getDatabase, ref, onValue, query, orderByChild, get, update } from "firebase/database";
 import { app, auth } from "../firebase/config";
 import colors from "../styles/colors";
 import Post from "../components/Post";
-
-const { width } = Dimensions.get("window");
+import Ionicons from "react-native-vector-icons/Ionicons";
 
 const MainPage = ({ navigation }) => {
   const [products, setProducts] = useState([]);
+  const [windowWidth, setWindowWidth] = useState(Dimensions.get("window").width);
   const db = getDatabase(app);
 
   useEffect(() => {
-    const productsRef = query(ref(db, "products"), orderByChild("createdAt"));
+    const handleResize = ({ window }) => setWindowWidth(window.width);
+    const subscription = Dimensions.addEventListener("change", handleResize);
+    return () => subscription?.remove?.();
+  }, []);
 
+  const isMobile = windowWidth < 500;
+
+  useEffect(() => {
+    const productsRef = query(ref(db, "products"), orderByChild("createdAt"));
     const unsubscribe = onValue(productsRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
         const loadedProducts = Object.keys(data)
           .map((key) => ({ id: key, ...data[key] }))
-          .sort((a, b) => b.createdAt - a.createdAt); // más nuevos primero
+          .sort((a, b) => b.createdAt - a.createdAt);
         setProducts(loadedProducts);
       } else {
         setProducts([]);
       }
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -52,146 +41,103 @@ const MainPage = ({ navigation }) => {
       const userId = auth.currentUser.uid;
       const productRef = ref(db, `products/${productId}`);
       const snapshot = await get(productRef);
-
       if (!snapshot.exists()) return;
+
       const productData = snapshot.val();
       const savedBy = productData.savedBy || {};
 
       if (savedBy[userId]) {
-        // Si ya estaba guardado -> desguardar
         delete savedBy[userId];
-        await update(ref(db, `users/${userId}/savedPosts`), {
-          [productId]: null,
-        });
+        await update(ref(db, `users/${userId}/savedPosts`), { [productId]: null });
       } else {
-        // Guardar
         savedBy[userId] = true;
-        await update(ref(db, `users/${userId}/savedPosts`), {
-          [productId]: "products",
-        });
+        await update(ref(db, `users/${userId}/savedPosts`), { [productId]: "products" });
       }
 
       await update(productRef, { savedBy });
-
-      // actualizar localmente el estado
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === productId ? { ...p, savedBy } : p
-        )
-      );
+      setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, savedBy } : p)));
     } catch (err) {
       console.error("Error al guardar/desguardar producto:", err);
     }
   };
 
-  // Separar por estado
   const promocionados = products.filter((p) => p.estado === "promocionado");
   const normales = products.filter((p) => !p.estado || p.estado === "normal");
-
-  // Distribuir normales en 3 filas
   const normalRows = [[], [], []];
-  normales.forEach((product, idx) => {
-    normalRows[idx % 3].push(product);
-  });
+  normales.forEach((product, idx) => normalRows[idx % 3].push(product));
 
   const renderHorizontalRow = (data) => {
     const scrollRef = useRef(null);
 
     const scrollBy = (offset) => {
       if (scrollRef.current) {
-        scrollRef.current.scrollTo({
-          x: scrollRef.current._scrollPos + offset,
-          animated: true,
-        });
+        scrollRef.current.scrollTo({ x: (scrollRef.current._contentOffset?.x || 0) + offset, animated: true });
       }
     };
 
     return (
-      <View style={styles.horizontalWrapper}>
-        <TouchableOpacity
-          style={styles.arrowButton}
-          onPress={() => scrollBy(-250)}
-        >
-          <Ionicons
-            name="chevron-back"
-            size={28}
-            color={colors.textPrimary}
-          />
-        </TouchableOpacity>
-
+      <View style={{ position: "relative", marginBottom: 10 }}>
+        {!isMobile && (
+          <>
+            <TouchableOpacity
+              style={[styles.scrollButton, { left: -10 }]}
+              onPress={() => scrollBy(-200)}
+            >
+              <Ionicons name="chevron-back" size={20} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.scrollButton, { right: -10 }]}
+              onPress={() => scrollBy(200)}
+            >
+              <Ionicons name="chevron-forward" size={20} color="#fff" />
+            </TouchableOpacity>
+          </>
+        )}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          ref={(ref) => {
-            scrollRef.current = {
-              _ref: ref,
-              _scrollPos: 0,
-              scrollTo: (opts) => ref?.scrollTo(opts),
-            };
-          }}
-          onScroll={(e) => {
-            scrollRef.current._scrollPos = e.nativeEvent.contentOffset.x;
-          }}
-          scrollEventThrottle={16}
+          contentContainerStyle={{ paddingHorizontal: 10 }}
+          ref={scrollRef}
         >
           {data.map((product) => (
-            <Post
-              key={product.id}
-              title={product.title}
-              images={product.images}
-              description={product.description}
-              savedCount={
-                product.savedBy ? Object.keys(product.savedBy).length : 0
-              }
-              isSaved={!!product.savedBy?.[auth.currentUser.uid]}
-              onSave={() => handleSaveProduct(product.id)}
-              onPress={() =>
-                navigation.navigate("DetailPost", { postId: product.id })
-              }
-            />
+            <View key={product.id} style={{ marginRight: 10 }}>
+              <Post
+                title={product.title}
+                images={product.images}
+                description={product.description}
+                savedCount={product.savedBy ? Object.keys(product.savedBy).length : 0}
+                isSaved={!!product.savedBy?.[auth.currentUser.uid]}
+                onSave={() => handleSaveProduct(product.id)}
+                onPress={() => navigation.navigate("DetailPost", { postId: product.id })}
+              />
+            </View>
           ))}
         </ScrollView>
-
-        <TouchableOpacity
-          style={styles.arrowButton}
-          onPress={() => scrollBy(250)}
-        >
-          <Ionicons
-            name="chevron-forward"
-            size={28}
-            color={colors.textPrimary}
-          />
-        </TouchableOpacity>
       </View>
     );
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.innerContainer}>
-        {promocionados.length > 0 && (
-          <View style={styles.rowContainer}>
-            <Text style={styles.rowTitle}>🔥 Promocionados</Text>
-            {renderHorizontalRow(promocionados)}
-          </View>
-        )}
-
-        {normalRows.map((row, idx) => (
-          <View style={styles.rowContainer} key={idx}>
-            <Text style={styles.rowTitle}>Normal - Fila {idx + 1}</Text>
-            {renderHorizontalRow(row)}
-          </View>
-        ))}
-
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Avisos")}
-          style={styles.linkContainer}
-        >
-          <Text style={styles.linkText}>
-            ¿Buscabas ver los avisos? Click acá
-          </Text>
-        </TouchableOpacity>
-      </View>
+    <ScrollView
+      style={[styles.container, { paddingHorizontal: isMobile ? 10 : 40 }]}
+      contentContainerStyle={{ alignItems: "center" }}
+      showsVerticalScrollIndicator={false}
+    >
+      {promocionados.length > 0 && (
+        <View style={styles.rowContainer}>
+          <Text style={styles.rowTitle}>Promocionados</Text>
+          {renderHorizontalRow(promocionados)}
+        </View>
+      )}
+      {normalRows.map((row, idx) => (
+        <View style={styles.rowContainer} key={idx}>
+          <Text style={styles.rowTitle}>Normal - Fila {idx + 1}</Text>
+          {renderHorizontalRow(row)}
+        </View>
+      ))}
+      <TouchableOpacity onPress={() => navigation.navigate("Avisos")} style={styles.linkContainer}>
+        <Text style={styles.linkText}>¿Buscabas ver los avisos? Click acá</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -200,46 +146,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    paddingVertical: 10,
   },
-  innerContainer: {
-    flex: 1,
-    paddingVertical: 15,
-    paddingHorizontal: 10,
-    width: "100%",
-    ...(Platform.OS === "web" && {
-      maxWidth: "80vw",
-      alignSelf: "center",
-    }),
-  },
-  rowContainer: {
-    marginBottom: 30,
-  },
-  rowTitle: {
-    fontSize: width < 400 ? 16 : 20,
-    fontWeight: "700",
-    color: colors.textPrimary,
-    marginHorizontal: 8,
-    marginBottom: 12,
-  },
-  horizontalWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  arrowButton: {
-    width: 32,
-    height: 120,
+  rowContainer: { marginBottom: 25, width: "100%", maxWidth: 1200 },
+  rowTitle: { fontSize: 20, fontWeight: "bold", color: colors.textPrimary, marginBottom: 10 },
+  linkContainer: { marginVertical: 20, alignItems: "center" },
+  linkText: { fontSize: 16, color: colors.primaryButton, fontWeight: "600", textDecorationLine: "underline" },
+  scrollButton: {
+    position: "absolute",
+    top: "35%",
+    width: 28,
+    height: 28,
+    backgroundColor: "rgba(34,139,250,0.7)",
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-  },
-  linkContainer: {
-    marginVertical: 25,
-    alignItems: "center",
-  },
-  linkText: {
-    fontSize: width < 400 ? 14 : 16,
-    color: colors.primaryButton,
-    fontWeight: "600",
-    textDecorationLine: "underline",
+    zIndex: 10,
   },
 });
 

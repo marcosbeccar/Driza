@@ -1,6 +1,6 @@
 // filepath: src/components/AvisoCard.js
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import colors from "../styles/colors";
 
@@ -13,11 +13,28 @@ const AvisoCard = ({
   onSave,
   onPress,
 }) => {
+  const [windowWidth, setWindowWidth] = useState(Dimensions.get("window").width);
+
+  useEffect(() => {
+    const handleResize = ({ window }) => {
+      setWindowWidth(window.width);
+    };
+
+    const subscription = Dimensions.addEventListener("change", handleResize);
+
+    return () => {
+      subscription?.remove?.();
+    };
+  }, []);
+
+  // ancho de la card: 50vw si >=500px, 90vw si <500px
+  const cardWidth = windowWidth < 500 ? "90vw" : "50vw";
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
-      <View style={{ flex: 1 }}>
+    <TouchableOpacity style={[styles.card, { width: cardWidth }]} onPress={onPress} activeOpacity={0.8}>
+      <View style={styles.textContainer}>
         <Text style={styles.title}>{title}</Text>
-        <Text style={styles.description} numberOfLines={2}>
+        <Text style={styles.description} numberOfLines={7}>
           {description}
         </Text>
         <Text style={styles.date}>{date}</Text>
@@ -54,6 +71,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    alignSelf: "center",
+  },
+  textContainer: {
+    flex: 1,
+    paddingRight: 8,
   },
   title: {
     fontSize: 18,

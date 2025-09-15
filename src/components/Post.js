@@ -1,10 +1,8 @@
 // filepath: src/components/Post.js
-import React from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, Platform } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import colors from "../styles/colors";
-
-const { width } = Dimensions.get("window");
 
 const Post = ({
   title,
@@ -15,38 +13,56 @@ const Post = ({
   onSave,
   onPress,
 }) => {
+  const [windowWidth, setWindowWidth] = useState(Dimensions.get("window").width);
+
+  useEffect(() => {
+    const handleResize = ({ window }) => setWindowWidth(window.width);
+    const subscription = Dimensions.addEventListener("change", handleResize);
+    return () => subscription?.remove?.();
+  }, []);
+
+  const isMobile = windowWidth < 500;
+  const cardWidth = isMobile ? 120 : 400;
+  const cardHeight = isMobile ? 220 : 140;
   const portada = images?.[0];
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={[styles.container, isMobile ? styles.mobileContainer : styles.desktopContainer, { width: cardWidth, height: cardHeight }]}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
       {portada ? (
-        <Image source={{ uri: portada }} style={styles.image} />
+        <Image source={{ uri: portada }} style={isMobile ? styles.mobileImage : styles.desktopImage} resizeMode="cover" />
       ) : (
-        <View style={[styles.image, styles.imagePlaceholder]}>
+        <View style={[isMobile ? styles.mobileImage : styles.desktopImage, styles.imagePlaceholder]}>
           <Text style={styles.noImageText}>Sin imagen</Text>
         </View>
       )}
 
       <View style={styles.textContainer}>
-        <Text style={styles.title} numberOfLines={1}>
-          {title}
-        </Text>
-        <Text style={styles.description} numberOfLines={2}>
+        <View style={styles.titleRow}>
+          <Text style={[styles.title, isMobile && styles.mobileTitle]} numberOfLines={2}>
+            {title}
+          </Text>
+          {onSave && (
+            <TouchableOpacity onPress={onSave} style={styles.iconButtonMobile}>
+              <Ionicons
+                name={isSaved ? "bookmark" : "bookmark-outline"}
+                size={isMobile ? 18 : 20}
+                color={isSaved ? "#05383a" : colors.textSecondary}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <Text style={[styles.description, isMobile && styles.mobileDescription]} numberOfLines={2}>
           {description}
         </Text>
-        <Text style={styles.savedCount}>
+
+        <Text style={[styles.savedCount, isMobile && styles.mobileSavedCount]}>
           Guardado por {savedCount} usuario/s
         </Text>
-
-        {onSave && (
-          <TouchableOpacity onPress={onSave} style={styles.iconButton}>
-            <Ionicons
-              name={isSaved ? "bookmark" : "bookmark-outline"}
-              size={24}
-              color={isSaved ? "#05383a" : colors.textSecondary}
-            />
-          </TouchableOpacity>
-        )}
       </View>
     </TouchableOpacity>
   );
@@ -56,36 +72,30 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
     borderRadius: 12,
-    marginHorizontal: 8,
-    marginBottom: 12,
+    marginBottom: 10,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
-    flexDirection: "row",
-    width: width < 400 ? width * 0.9 : 320, // ancho máximo en mobile
-    maxWidth: 360, // límite en pantallas grandes
-    alignSelf: "flex-start",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
     overflow: "hidden",
+    alignSelf: "center",
   },
-  image: { width: 110, height: 110, borderRadius: 8, margin: 8 },
-  imagePlaceholder: {
-    backgroundColor: "#eee",
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  desktopContainer: { flexDirection: "row" },
+  mobileContainer: { flexDirection: "column" },
+  desktopImage: { width: 120, height: 120, borderRadius: 8, margin: 8 },
+  mobileImage: { width: "100%", height: 120, borderRadius: 8, marginBottom: 6 },
+  imagePlaceholder: { backgroundColor: "#eee", justifyContent: "center", alignItems: "center" },
   noImageText: { color: colors.textSecondary, fontSize: 14 },
-  textContainer: { flex: 1, padding: 8, justifyContent: "center" },
-  title: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.textPrimary,
-    marginBottom: 4,
-  },
-  description: { fontSize: 14, color: colors.textSecondary, marginBottom: 4 },
-  savedCount: { fontSize: 12, color: "#228bfa", marginBottom: 8 },
-  iconButton: { padding: 4, alignSelf: "flex-start" },
+  textContainer: { flex: 1, paddingHorizontal: 6, justifyContent: "flex-start" },
+  titleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 2 },
+  title: { fontSize: 16, fontWeight: "700", color: colors.textPrimary },
+  mobileTitle: { fontSize: 14, flex: 1 },
+  description: { fontSize: 14, color: colors.textSecondary },
+  mobileDescription: { fontSize: 12, marginTop: 2 },
+  savedCount: { fontSize: 12, color: "#228bfa", marginTop: 6 },
+  mobileSavedCount: { fontSize: 10 },
+  iconButtonMobile: { marginLeft: 4 },
 });
 
 export default Post;
