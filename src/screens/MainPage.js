@@ -1,12 +1,15 @@
 // filepath: src/screens/MainPage.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  Dimensions,
+  Platform,
 } from "react-native";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import {
   getDatabase,
   ref,
@@ -19,6 +22,8 @@ import {
 import { app, auth } from "../firebase/config";
 import colors from "../styles/colors";
 import Post from "../components/Post";
+
+const { width } = Dimensions.get("window");
 
 const MainPage = ({ navigation }) => {
   const [products, setProducts] = useState([]);
@@ -89,49 +94,104 @@ const MainPage = ({ navigation }) => {
     normalRows[idx % 3].push(product);
   });
 
-  const renderHorizontalRow = (data) => (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      {data.map((product) => (
-        <Post
-          key={product.id}
-          title={product.title}
-          images={product.images}
-          description={product.description}
-          savedCount={product.savedBy ? Object.keys(product.savedBy).length : 0}
-          isSaved={!!product.savedBy?.[auth.currentUser.uid]}
-          onSave={() => handleSaveProduct(product.id)}
-          onPress={() =>
-            navigation.navigate("DetailPost", { postId: product.id })
-          }
-        />
-      ))}
-    </ScrollView>
-  );
+  const renderHorizontalRow = (data) => {
+    const scrollRef = useRef(null);
+
+    const scrollBy = (offset) => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTo({
+          x: scrollRef.current._scrollPos + offset,
+          animated: true,
+        });
+      }
+    };
+
+    return (
+      <View style={styles.horizontalWrapper}>
+        <TouchableOpacity
+          style={styles.arrowButton}
+          onPress={() => scrollBy(-250)}
+        >
+          <Ionicons
+            name="chevron-back"
+            size={28}
+            color={colors.textPrimary}
+          />
+        </TouchableOpacity>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          ref={(ref) => {
+            scrollRef.current = {
+              _ref: ref,
+              _scrollPos: 0,
+              scrollTo: (opts) => ref?.scrollTo(opts),
+            };
+          }}
+          onScroll={(e) => {
+            scrollRef.current._scrollPos = e.nativeEvent.contentOffset.x;
+          }}
+          scrollEventThrottle={16}
+        >
+          {data.map((product) => (
+            <Post
+              key={product.id}
+              title={product.title}
+              images={product.images}
+              description={product.description}
+              savedCount={
+                product.savedBy ? Object.keys(product.savedBy).length : 0
+              }
+              isSaved={!!product.savedBy?.[auth.currentUser.uid]}
+              onSave={() => handleSaveProduct(product.id)}
+              onPress={() =>
+                navigation.navigate("DetailPost", { postId: product.id })
+              }
+            />
+          ))}
+        </ScrollView>
+
+        <TouchableOpacity
+          style={styles.arrowButton}
+          onPress={() => scrollBy(250)}
+        >
+          <Ionicons
+            name="chevron-forward"
+            size={28}
+            color={colors.textPrimary}
+          />
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   return (
     <ScrollView style={styles.container}>
-      {promocionados.length > 0 && (
-        <View style={styles.rowContainer}>
-          <Text style={styles.rowTitle}>Promocionados</Text>
-          {renderHorizontalRow(promocionados)}
-        </View>
-      )}
+      <View style={styles.innerContainer}>
+        {promocionados.length > 0 && (
+          <View style={styles.rowContainer}>
+            <Text style={styles.rowTitle}>🔥 Promocionados</Text>
+            {renderHorizontalRow(promocionados)}
+          </View>
+        )}
 
-      {normalRows.map((row, idx) => (
-        <View style={styles.rowContainer} key={idx}>
-          <Text style={styles.rowTitle}>Normal - Fila {idx + 1}</Text>
-          {renderHorizontalRow(row)}
-        </View>
-      ))}
+        {normalRows.map((row, idx) => (
+          <View style={styles.rowContainer} key={idx}>
+            <Text style={styles.rowTitle}>Normal - Fila {idx + 1}</Text>
+            {renderHorizontalRow(row)}
+          </View>
+        ))}
 
-      <TouchableOpacity
-        onPress={() => navigation.navigate("Avisos")}
-        style={styles.linkContainer}
-      >
-        <Text style={styles.linkText}>
-          ¿Buscabas ver los avisos? Click acá
-        </Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Avisos")}
+          style={styles.linkContainer}
+        >
+          <Text style={styles.linkText}>
+            ¿Buscabas ver los avisos? Click acá
+          </Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
@@ -140,24 +200,43 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingVertical: 10,
+  },
+  innerContainer: {
+    flex: 1,
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    width: "100%",
+    ...(Platform.OS === "web" && {
+      maxWidth: "80vw",
+      alignSelf: "center",
+    }),
   },
   rowContainer: {
-    marginBottom: 25,
+    marginBottom: 30,
   },
   rowTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: width < 400 ? 16 : 20,
+    fontWeight: "700",
     color: colors.textPrimary,
-    marginHorizontal: 10,
-    marginBottom: 10,
+    marginHorizontal: 8,
+    marginBottom: 12,
+  },
+  horizontalWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  arrowButton: {
+    width: 32,
+    height: 120,
+    justifyContent: "center",
+    alignItems: "center",
   },
   linkContainer: {
-    marginVertical: 20,
+    marginVertical: 25,
     alignItems: "center",
   },
   linkText: {
-    fontSize: 16,
+    fontSize: width < 400 ? 14 : 16,
     color: colors.primaryButton,
     fontWeight: "600",
     textDecorationLine: "underline",

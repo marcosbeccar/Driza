@@ -1,8 +1,10 @@
 // filepath: src/components/Post.js
 import React from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, Platform } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import colors from "../styles/colors";
+
+const { width } = Dimensions.get("window");
 
 const Post = ({
   title,
@@ -53,20 +55,21 @@ const Post = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
-    borderRadius: 10,
-    marginBottom: 10,
+    borderRadius: 12,
+    marginHorizontal: 8,
+    marginBottom: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 6,
+    elevation: 3,
     flexDirection: "row",
-    width: "100%",
-    maxWidth: 800,
-    alignSelf: "center",
+    width: width < 400 ? width * 0.9 : 320, // ancho máximo en mobile
+    maxWidth: 360, // límite en pantallas grandes
+    alignSelf: "flex-start",
     overflow: "hidden",
   },
-  image: { width: 120, height: 120, borderRadius: 8, margin: 8 },
+  image: { width: 110, height: 110, borderRadius: 8, margin: 8 },
   imagePlaceholder: {
     backgroundColor: "#eee",
     justifyContent: "center",
