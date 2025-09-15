@@ -1,25 +1,100 @@
 // filepath: src/screens/SavedPosts.js
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, useWindowDimensions, ScrollView } from "react-native";
+import React, { useEffect, useState, useRef } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
 import { db, auth } from "../firebase/config";
 import { ref, onValue, get, update } from "firebase/database";
 import Post from "../components/Post";
 import AvisoCard from "../components/AvisoCard";
 import colors from "../styles/colors";
 import { useNavigation } from "@react-navigation/native";
+import Ionicons from "react-native-vector-icons/Ionicons";
+
+const HorizontalRow = ({ data, onSave, onPressItem, isMobile }) => {
+  const scrollRef = useRef(null);
+  const scrollX = useRef(0);
+  const [hovered, setHovered] = useState(false);
+
+  const scrollBy = (offset) => {
+    if (scrollRef.current) {
+      const newX = Math.max(0, scrollX.current + offset);
+      scrollRef.current.scrollTo({ x: newX, animated: true });
+      scrollX.current = newX;
+    }
+  };
+
+  return (
+    <View
+      style={{ position: "relative", marginBottom: 20 }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {!isMobile && hovered && (
+        <>
+          <TouchableOpacity
+            style={[styles.scrollButton, { left: -12 }]}
+            onPress={() => scrollBy(-250)}
+          >
+            <Ionicons name="chevron-back" size={20} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.scrollButton, { right: -12 }]}
+            onPress={() => scrollBy(250)}
+          >
+            <Ionicons name="chevron-forward" size={20} color="#fff" />
+          </TouchableOpacity>
+        </>
+      )}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 10 }}
+        ref={scrollRef}
+        onScroll={(e) => {
+          scrollX.current = e.nativeEvent.contentOffset.x;
+        }}
+        scrollEventThrottle={16}
+      >
+        {data.map((item) => (
+          <View key={item.id} style={{ marginRight: 10 }}>
+            <Post
+              title={item.title}
+              images={item.images}
+              description={item.description}
+              savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
+              isSaved={!!item.savedBy?.[auth.currentUser.uid]}
+              onSave={() => onSave(item.id, item.tipo)}
+              onPress={() => onPressItem(item)}
+            />
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
 
 const SavedPosts = () => {
   const [savedProducts, setSavedProducts] = useState([]);
   const [savedAvisos, setSavedAvisos] = useState([]);
-  const { width } = useWindowDimensions();
+  const [activeTab, setActiveTab] = useState("products");
+  const [windowWidth, setWindowWidth] = useState(
+    Dimensions.get("window").width
+  );
   const navigation = useNavigation();
 
-  const isLargeScreen = width > 800;
-  const cardContainerStyle = {
-    width: isLargeScreen ? 700 : "95%",
-    alignSelf: "center",
-    marginBottom: 12,
-  };
+  useEffect(() => {
+    const handleResize = ({ window }) => setWindowWidth(window.width);
+    const subscription = Dimensions.addEventListener("change", handleResize);
+    return () => subscription?.remove?.();
+  }, []);
+
+  const isMobile = windowWidth < 500;
 
   useEffect(() => {
     const userId = auth.currentUser.uid;
@@ -59,10 +134,14 @@ const SavedPosts = () => {
 
       if (savedBy[userId]) {
         delete savedBy[userId];
-        await update(ref(db, `users/${userId}/savedPosts`), { [postId]: null });
+        await update(ref(db, `users/${userId}/savedPosts`), {
+          [postId]: null,
+        });
       } else {
         savedBy[userId] = true;
-        await update(ref(db, `users/${userId}/savedPosts`), { [postId]: tipo });
+        await update(ref(db, `users/${userId}/savedPosts`), {
+          [postId]: tipo,
+        });
       }
 
       await update(postRef, { savedBy });
@@ -72,50 +151,71 @@ const SavedPosts = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ alignItems: "center" }}>
       <Text style={styles.title}>Posts Guardados</Text>
 
-      {/* Productos */}
-      {savedProducts.length > 0 && (
-        <>
-          <Text style={styles.subtitle}>Productos Guardados</Text>
-          {savedProducts.map((item) => (
-            <View key={item.id} style={cardContainerStyle}>
-              <Post
-                title={item.title}
-                images={item.images}
-                description={item.description}
-                savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
-                isSaved={!!item.savedBy?.[auth.currentUser.uid]}
-                onSave={() => toggleSave(item.id, item.tipo)}
-                onPress={() =>
-                  navigation.navigate("DetailPost", {
-                    postId: item.id,
-                    tipo: "products",
-                  })
-                }
-              />
-            </View>
-          ))}
-        </>
-      )}
+      {/* Tabs */}
+      <View style={styles.tabsContainer}>
+        <TouchableOpacity
+          style={[
+            styles.tab,
+            activeTab === "products" && styles.activeTab,
+          ]}
+          onPress={() => setActiveTab("products")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "products" && styles.activeTabText,
+            ]}
+          >
+            Productos
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "avisos" && styles.activeTab]}
+          onPress={() => setActiveTab("avisos")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "avisos" && styles.activeTabText,
+            ]}
+          >
+            Avisos
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-      {/* Divider */}
-      {savedProducts.length > 0 && savedAvisos.length > 0 && (
-        <View style={styles.divider} />
+      {/* Productos */}
+      {activeTab === "products" && savedProducts.length > 0 && (
+        <View style={styles.rowContainer}>
+          <HorizontalRow
+            data={savedProducts}
+            onSave={toggleSave}
+            onPressItem={(item) =>
+              navigation.navigate("DetailPost", {
+                postId: item.id,
+                tipo: "products",
+              })
+            }
+            isMobile={isMobile}
+          />
+        </View>
       )}
 
       {/* Avisos */}
-      {savedAvisos.length > 0 && (
-        <>
-          <Text style={styles.subtitle}>Avisos Guardados</Text>
+      {activeTab === "avisos" && savedAvisos.length > 0 && (
+        <View style={styles.rowContainer}>
           {savedAvisos.map((item) => (
-            <View key={item.id} style={cardContainerStyle}>
+            <View key={item.id} style={styles.avisoCardWrapper}>
               <AvisoCard
                 title={item.title}
                 description={item.description}
                 date={new Date(item.createdAt).toLocaleString()}
-                savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
+                savedCount={
+                  item.savedBy ? Object.keys(item.savedBy).length : 0
+                }
                 isSaved={!!item.savedBy?.[auth.currentUser.uid]}
                 onSave={() => toggleSave(item.id, item.tipo)}
                 onPress={() =>
@@ -127,7 +227,7 @@ const SavedPosts = () => {
               />
             </View>
           ))}
-        </>
+        </View>
       )}
     </ScrollView>
   );
@@ -137,7 +237,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    padding: 20,
+    paddingVertical: 20,
   },
   title: {
     color: colors.textPrimary,
@@ -146,17 +246,48 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
-  subtitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: colors.textPrimary,
-    marginBottom: 12,
-    marginTop: 10,
+  tabsContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 20,
   },
-  divider: {
-    height: 1,
-    backgroundColor: "#ccc",
-    marginVertical: 20,
+  tab: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
+  activeTab: {
+    borderBottomColor: "#962A51", // paleta
+  },
+  tabText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  activeTabText: {
+    color: "#962A51", // paleta
+    fontWeight: "bold",
+  },
+  rowContainer: {
+    width: "100%",
+    maxWidth: "80vw",
+    marginBottom: 25,
+  },
+  avisoCardWrapper: {
+    marginBottom: 12,
+    width: "95%",
+    alignSelf: "center",
+  },
+  scrollButton: {
+    position: "absolute",
+    top: "35%",
+    width: 28,
+    height: 28,
+    backgroundColor: "rgba(150,42,81,0.85)", // #962a51 con transparencia
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
   },
 });
 

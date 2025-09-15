@@ -22,7 +22,7 @@ const Post = ({
   }, []);
 
   const isMobile = windowWidth < 500;
-  const cardWidth = isMobile ? 120 : 400;
+  const cardWidth = isMobile ? 120 : 350;
   const cardHeight = isMobile ? 220 : 140;
   const portada = images?.[0];
 
@@ -87,15 +87,25 @@ const styles = StyleSheet.create({
   mobileImage: { width: "100%", height: 120, borderRadius: 8, marginBottom: 6 },
   imagePlaceholder: { backgroundColor: "#eee", justifyContent: "center", alignItems: "center" },
   noImageText: { color: colors.textSecondary, fontSize: 14 },
-  textContainer: { flex: 1, paddingHorizontal: 6, justifyContent: "flex-start" },
-  titleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 2 },
-  title: { fontSize: 16, fontWeight: "700", color: colors.textPrimary },
+  textContainer: { flex: 1, paddingHorizontal: 6, justifyContent: "center" },
+  titleRow: { 
+    flexDirection: "row", 
+    justifyContent: "space-between", 
+    alignItems: "center", 
+    marginBottom: 4 
+  },
+  title: { 
+    fontSize: 16, 
+    fontWeight: "700", 
+    color: colors.textPrimary, 
+    flexShrink: 1 
+  },
   mobileTitle: { fontSize: 14, flex: 1 },
   description: { fontSize: 14, color: colors.textSecondary },
   mobileDescription: { fontSize: 12, marginTop: 2 },
   savedCount: { fontSize: 12, color: "#228bfa", marginTop: 6 },
   mobileSavedCount: { fontSize: 10 },
-  iconButtonMobile: { marginLeft: 4 },
+  iconButtonMobile: { marginLeft: 6, alignSelf: "center" },
 });
 
 export default Post;

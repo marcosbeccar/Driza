@@ -1,11 +1,14 @@
 const colors = {
-  background: '#f8f8f8', // Color de fondo general
-  primaryButton: '#007BFF', // Color de los botones principales
-  secondaryButton: '#6C757D', // Color de los botones secundarios
-  textPrimary: '#212529', // Color del texto principal
-  textSecondary: '#6C757D', // Color del texto secundario
-  border: '#E0E0E0', // Color de los bordes
-  error: '#FF0000', // Color para mensajes de error
+  background: "#f8f8f8", // Fondo general
+  primary: "#962A51", // Principal (botones activos, tabs, detalles)
+  secondary: "#A47551", // Secundario (resaltados suaves, hover)
+  accent: "#05383A", // Color fuerte de contraste
+  muted: "#96A39E", // Colores apagados (fondo de tabs, bordes suaves)
+
+  textPrimary: "#212529", // Texto principal
+  textSecondary: "#6C757D", // Texto secundario
+  border: "#E0E0E0", // Bordes
+  error: "#FF0000", // Errores
 };
 
 export default colors;
