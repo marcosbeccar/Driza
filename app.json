@@ -24,7 +24,17 @@
       "package": "com.driza.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "build": {
+        "babel": {
+          "include": ["@expo/vector-icons"]
+        },
+        "bundle": {
+          "copy": [
+            "node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts"
+          ]
+        }
+      }
     },
     "extra": {
       "eas": {

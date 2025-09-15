@@ -1,14 +1,18 @@
 {
   "rules": {
-    "users": {
-      "$uid": {
-        // Solo el usuario autenticado puede leer/escribir sus propios datos
-        ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid"
-      }
+    "baneados": {
+      ".read": true,
+      ".write": "auth != null"
     },
-    "posts": {
-      // Solo usuarios autenticados pueden leer/escribir posts
+    "users": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "products": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "avisos": {
       ".read": "auth != null",
       ".write": "auth != null"
     }

@@ -1,68 +1,50 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native-web";
-import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { ref, set, get } from "firebase/database";
 import { auth, db } from "../firebase/config";
 import colors from "../styles/colors";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 
 const AuthScreen = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
-  const route = useRoute();
-  const bannedMessage = route?.params?.bannedMessage || "";
 
   const handleGoogleLogin = async () => {
-    if (!termsAccepted) return;
-
     const provider = new GoogleAuthProvider();
-    setLoading(true);
 
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       const userId = user.uid;
 
-      // 🔎 Verificar si está baneado
-      const sanitizeKey = (str) => str.replace(/[.#$/[\]]/g, "_");
-      const bannedSnap = await get(ref(db, `baneados/${sanitizeKey(user.email)}`));
-      if (bannedSnap.exists() && bannedSnap.val().banned) {
-        await signOut(auth); // cerrar sesión si estaba autenticado
-        navigation.navigate("AuthScreen", {
-          bannedMessage: "🚫 Tu cuenta ha sido bloqueada. No puedes iniciar sesión.",
-        });
-        return;
-      }
+      console.log("✅ Usuario autenticado:", user.email);
 
-      // 🔄 Crear usuario si no existía
       const userRef = ref(db, `users/${userId}`);
       const snapshot = await get(userRef);
+
       if (!snapshot.exists()) {
+        // 🔄 Determinar organización según el email
         let organizacion = "NO";
         if (user.email.endsWith("@udesa.edu.ar")) {
           organizacion = "UDESA";
         }
+        // Aquí más reglas si quieres agregar más organizaciones
+        // else if (user.email.endsWith("@itba.edu.ar")) organizacion = "ITBA";
+
         await set(userRef, {
           email: user.email,
           userName: user.displayName,
           savedPosts: {},
-          organizacion,
+          organizacion: organizacion,
         });
+
         console.log("📌 Usuario creado en la DB con organización:", organizacion);
       } else {
         console.log("ℹ️ Usuario ya existía en la DB, no se sobrescribió.");
       }
-
-      console.log("✅ Usuario autenticado:", user.email);
-      // Aquí podrías redirigir a tu pantalla principal, por ejemplo:
-      // navigation.replace("HomeScreen");
-
     } catch (error) {
       console.error("❌ Error al iniciar sesión con Google:", error);
-      Alert.alert("Error", "No se pudo iniciar sesión. Intenta de nuevo.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -72,10 +54,6 @@ const AuthScreen = () => {
       <Text style={styles.subtitle}>
         Inicia sesión o regístrate con tu cuenta de Google
       </Text>
-
-      {bannedMessage ? (
-        <Text style={styles.bannedText}>{bannedMessage}</Text>
-      ) : null}
 
       {/* Checkbox términos */}
       <TouchableOpacity
@@ -96,13 +74,11 @@ const AuthScreen = () => {
 
       {/* Botón Google */}
       <TouchableOpacity
-        style={[styles.button, (!termsAccepted || loading) && styles.buttonDisabled]}
+        style={[styles.button, !termsAccepted && styles.buttonDisabled]}
         onPress={handleGoogleLogin}
-        disabled={!termsAccepted || loading}
+        disabled={!termsAccepted}
       >
-        <Text style={styles.buttonText}>
-          {loading ? "Cargando..." : "Continuar con Google"}
-        </Text>
+        <Text style={styles.buttonText}>Continuar con Google</Text>
       </TouchableOpacity>
     </View>
   );
@@ -126,13 +102,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
     marginBottom: 30,
-    textAlign: "center",
-  },
-  bannedText: {
-    color: "#FF3B30",
-    fontWeight: "bold",
-    fontSize: 16,
-    marginBottom: 20,
     textAlign: "center",
   },
   termsContainer: {
