@@ -21,6 +21,7 @@ import { app, auth } from "../firebase/config";
 import colors from "../styles/colors";
 import Post from "../components/Post";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import Header from "../components/Header";
 
 const MainPage = ({ navigation }) => {
   const [products, setProducts] = useState([]);
@@ -108,6 +109,7 @@ const MainPage = ({ navigation }) => {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
+        
         {!isMobile && hovered && (
           <>
             <TouchableOpacity
