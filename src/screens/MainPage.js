@@ -109,7 +109,6 @@ const MainPage = ({ navigation }) => {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        
         {!isMobile && hovered && (
           <>
             <TouchableOpacity
@@ -159,30 +158,38 @@ const MainPage = ({ navigation }) => {
   };
 
   return (
-    <ScrollView
-      style={[styles.container, { paddingHorizontal: isMobile ? 10 : 40 }]}
-      contentContainerStyle={{ alignItems: "center" }}
-      showsVerticalScrollIndicator={false}
-    >
-      {promocionados.length > 0 && (
-        <View style={styles.rowContainer}>
-          <Text style={styles.rowTitle}>Promocionados</Text>
-          {renderHorizontalRow(promocionados)}
-        </View>
-      )}
-      {normalRows.map((row, idx) => (
-        <View style={styles.rowContainer} key={idx}>
-          <Text style={styles.rowTitle}>Normal - Fila {idx + 1}</Text>
-          {renderHorizontalRow(row)}
-        </View>
-      ))}
-      <TouchableOpacity
-        onPress={() => navigation.navigate("Avisos")}
-        style={styles.linkContainer}
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* Header siempre arriba */}
+      <Header />
+
+      {/* Contenido scrollable */}
+      <ScrollView
+        style={{ flex: 1, paddingHorizontal: isMobile ? 10 : 40 }}
+        contentContainerStyle={{ alignItems: "center" }}
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.linkText}>¿Buscabas ver los avisos? Click acá</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {promocionados.length > 0 && (
+          <View style={styles.rowContainer}>
+            <Text style={styles.rowTitle}>Promocionados</Text>
+            {renderHorizontalRow(promocionados)}
+          </View>
+        )}
+        {normalRows.map((row, idx) => (
+          <View style={styles.rowContainer} key={idx}>
+            <Text style={styles.rowTitle}>Normal - Fila {idx + 1}</Text>
+            {renderHorizontalRow(row)}
+          </View>
+        ))}
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Avisos")}
+          style={styles.linkContainer}
+        >
+          <Text style={styles.linkText}>
+            ¿Buscabas ver los avisos? Click acá
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
   );
 };
 

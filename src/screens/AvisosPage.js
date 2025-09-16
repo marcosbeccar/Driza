@@ -1,6 +1,6 @@
 // filepath: src/screens/AvisosPage.js
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, StyleSheet, View, Platform, Dimensions } from "react-native";
+import { ScrollView, Text, StyleSheet, View, Dimensions } from "react-native";
 import {
   getDatabase,
   ref,
@@ -13,6 +13,7 @@ import {
 import { app, auth } from "../firebase/config";
 import colors from "../styles/colors";
 import AvisoCard from "../components/AvisoCard";
+import Header from "../components/Header"; // <--- agregado
 
 const { width } = Dimensions.get("window");
 
@@ -62,7 +63,6 @@ const AvisosPage = ({ navigation }) => {
 
       await update(avisoRef, { savedBy });
 
-      // actualizar estado local
       setAvisos((prev) =>
         prev.map((a) => (a.id === avisoId ? { ...a, savedBy } : a))
       );
@@ -73,6 +73,7 @@ const AvisosPage = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container}>
+      <Header /> {/* <-- agregado */}
       <View style={styles.innerContainer}>
         {avisos.length === 0 ? (
           <Text style={styles.emptyText}>No hay avisos publicados aún.</Text>
@@ -87,7 +88,10 @@ const AvisosPage = ({ navigation }) => {
               isSaved={!!aviso.savedBy?.[auth.currentUser.uid]}
               onSave={() => handleSaveAviso(aviso.id)}
               onPress={() =>
-                navigation.navigate("DetailPost", { postId: aviso.id, tipo: "avisos" })
+                navigation.navigate("DetailPost", {
+                  postId: aviso.id,
+                  tipo: "avisos",
+                })
               }
             />
           ))
@@ -100,7 +104,8 @@ const AvisosPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingVertical: 10,
+    paddingTop: 0, // ⬅ sin espacio arriba
+    paddingBottom: 10,
     backgroundColor: colors.background,
   },
   innerContainer: {

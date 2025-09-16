@@ -12,7 +12,8 @@ import CreateMenu from "../screens/CreateMenu";
 import CreateProduct from "../screens/CreateProduct";
 import CreateAviso from "../screens/CreateAviso";
 import AvisosPage from "../screens/AvisosPage";
-import AdminScreen from "../screens/AdminScreen"; // 📌 nuevo
+import AdminScreen from "../screens/AdminScreen";
+import SearchResults from "../screens/SearchResults"; 
 
 const Tab = createBottomTabNavigator();
 
@@ -106,6 +107,14 @@ const TabNavigator = () => {
       <Tab.Screen
         name="CreateAviso"
         component={CreateAviso}
+        options={{
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: "none" },
+        }}
+      />
+      <Tab.Screen
+        name="SearchResults"
+        component={SearchResults}
         options={{
           tabBarButton: () => null,
           tabBarItemStyle: { display: "none" },

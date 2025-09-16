@@ -15,6 +15,7 @@ import AvisoCard from "../components/AvisoCard";
 import colors from "../styles/colors";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import Header from "../components/Header"; // <-- agregado
 
 const HorizontalRow = ({ data, onSave, onPressItem, isMobile }) => {
   const scrollRef = useRef(null);
@@ -151,16 +152,16 @@ const SavedPosts = () => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ alignItems: "center" }}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ alignItems: "center" }}
+    >
+      <Header /> {/* <-- agregado */}
       <Text style={styles.title}>Posts Guardados</Text>
-
       {/* Tabs */}
       <View style={styles.tabsContainer}>
         <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === "products" && styles.activeTab,
-          ]}
+          style={[styles.tab, activeTab === "products" && styles.activeTab]}
           onPress={() => setActiveTab("products")}
         >
           <Text
@@ -186,7 +187,6 @@ const SavedPosts = () => {
           </Text>
         </TouchableOpacity>
       </View>
-
       {/* Productos */}
       {activeTab === "products" && savedProducts.length > 0 && (
         <View style={styles.rowContainer}>
@@ -203,7 +203,6 @@ const SavedPosts = () => {
           />
         </View>
       )}
-
       {/* Avisos */}
       {activeTab === "avisos" && savedAvisos.length > 0 && (
         <View style={styles.rowContainer}>
@@ -213,9 +212,7 @@ const SavedPosts = () => {
                 title={item.title}
                 description={item.description}
                 date={new Date(item.createdAt).toLocaleString()}
-                savedCount={
-                  item.savedBy ? Object.keys(item.savedBy).length : 0
-                }
+                savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
                 isSaved={!!item.savedBy?.[auth.currentUser.uid]}
                 onSave={() => toggleSave(item.id, item.tipo)}
                 onPress={() =>
@@ -236,8 +233,9 @@ const SavedPosts = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 0, // ⬅ sin espacio arriba
+    paddingBottom: 10,
     backgroundColor: colors.background,
-    paddingVertical: 20,
   },
   title: {
     color: colors.textPrimary,
@@ -258,14 +256,14 @@ const styles = StyleSheet.create({
     borderBottomColor: "transparent",
   },
   activeTab: {
-    borderBottomColor: "#962A51", // paleta
+    borderBottomColor: "#962A51",
   },
   tabText: {
     fontSize: 16,
     color: colors.textSecondary,
   },
   activeTabText: {
-    color: "#962A51", // paleta
+    color: "#962A51",
     fontWeight: "bold",
   },
   rowContainer: {
@@ -283,7 +281,7 @@ const styles = StyleSheet.create({
     top: "35%",
     width: 28,
     height: 28,
-    backgroundColor: "rgba(150,42,81,0.85)", // #962a51 con transparencia
+    backgroundColor: "rgba(150,42,81,0.85)",
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",

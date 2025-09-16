@@ -1,29 +1,43 @@
 // filepath: src/screens/CreateMenu.js
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from "react-native";
 import colors from "../styles/colors";
 import { useNavigation } from "@react-navigation/native";
+import Header from "../components/Header"; 
+import logo from "../../assets/Banner_chato.png"; 
 
 const CreateMenu = () => {
   const navigation = useNavigation();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Crear nueva publicación</Text>
+      {/* Header */}
+      <Header />
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("CreateProduct")}
-      >
-        <Text style={styles.buttonText}>Producto</Text>
-      </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Banner grande */}
+        <Image
+          source={logo}
+          style={styles.banner}
+          resizeMode="contain"
+        />
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("CreateAviso")}
-      >
-        <Text style={styles.buttonText}>Aviso</Text>
-      </TouchableOpacity>
+        <Text style={styles.title}>Crear nueva publicación</Text>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("CreateProduct")}
+        >
+          <Text style={styles.buttonText}>Producto</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("CreateAviso")}
+        >
+          <Text style={styles.buttonText}>Aviso</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 };
@@ -32,9 +46,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    justifyContent: "center",
+  },
+  scrollContent: {
     alignItems: "center",
     padding: 20,
+  },
+  banner: {
+    width: "85%",           // ancho por defecto
+    maxWidth: 600,          // limita el tamaño en pantallas grandes
+    height: 150,
+    marginBottom: 30,
   },
   title: {
     fontSize: 28,
@@ -45,6 +66,7 @@ const styles = StyleSheet.create({
   },
   button: {
     width: "80%",
+    maxWidth: 400,
     backgroundColor: colors.primaryButton,
     paddingVertical: 16,
     borderRadius: 10,

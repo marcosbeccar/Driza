@@ -13,6 +13,7 @@ import {
 import { getDatabase, ref, get, update, remove, set } from "firebase/database";
 import { auth, app } from "../firebase/config";
 import colors from "../styles/colors";
+import Header from "../components/Header"; // <-- agregado
 
 const db = getDatabase(app);
 
@@ -192,6 +193,7 @@ const AdminScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
+      <Header /> {/* <-- agregado */}
       <Text style={styles.title}>Panel de Administrador</Text>
 
       {/* Buscar publicaciones */}
@@ -237,7 +239,13 @@ const AdminScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15, backgroundColor: colors.background },
+  container: {
+  flex: 1,
+  paddingTop: 0,  // ⬅ sin espacio arriba
+  paddingBottom: 10,
+  paddingHorizontal: 10,
+  backgroundColor: colors.background,
+},
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 10, color: colors.textPrimary },
   input: {
     borderWidth: 1,

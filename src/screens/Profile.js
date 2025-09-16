@@ -1,3 +1,4 @@
+// filepath: src/screens/Profile.js
 import React, { useEffect, useState, useRef } from "react";
 import {
   View,
@@ -14,6 +15,7 @@ import AvisoCard from "../components/AvisoCard";
 import colors from "../styles/colors";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import Header from "../components/Header"; // <--- HEADER IMPORTADO
 
 const HorizontalRow = ({ data, onSave, onPressItem, isMobile }) => {
   const scrollRef = useRef(null);
@@ -51,43 +53,44 @@ const HorizontalRow = ({ data, onSave, onPressItem, isMobile }) => {
         </>
       )}
       <ScrollView
-  horizontal
-  showsHorizontalScrollIndicator={false}
-  ref={scrollRef}
-  onScroll={(e) => { scrollX.current = e.nativeEvent.contentOffset.x; }}
-  scrollEventThrottle={16}
->
-  <View
-    style={{
-      flexDirection: "row",
-      paddingLeft: isMobile ? 10 : 50,
-      paddingRight: isMobile ? 10 : 50,
-      width: isMobile ? "95vw" : "85vw",
-      alignSelf: "center",
-    }}
-  >
-    {data.map((item) => (
-      <View key={item.id} style={{ marginRight: 10 }}>
-        <Post
-          title={item.title}
-          images={item.images}
-          description={item.description}
-          savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
-          isSaved={!!item.savedBy?.[auth.currentUser.uid]}
-          onSave={() => onSave(item.id, item.tipo)}
-          onPress={() => onPressItem(item)}
-        />
-        <TouchableOpacity
-          style={{ ...styles.deleteButton, width: "100%" }} // ancho completo del contenedor
-          onPress={() => onSave(item.id, item.tipo, true)}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        ref={scrollRef}
+        onScroll={(e) => {
+          scrollX.current = e.nativeEvent.contentOffset.x;
+        }}
+        scrollEventThrottle={16}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            paddingLeft: isMobile ? 10 : 50,
+            paddingRight: isMobile ? 10 : 50,
+            width: isMobile ? "95vw" : "85vw",
+            alignSelf: "center",
+          }}
         >
-          <Text style={styles.deleteButtonText}>Eliminar</Text>
-        </TouchableOpacity>
-      </View>
-    ))}
-  </View>
-</ScrollView>
-
+          {data.map((item) => (
+            <View key={item.id} style={{ marginRight: 10 }}>
+              <Post
+                title={item.title}
+                images={item.images}
+                description={item.description}
+                savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
+                isSaved={!!item.savedBy?.[auth.currentUser.uid]}
+                onSave={() => onSave(item.id, item.tipo)}
+                onPress={() => onPressItem(item)}
+              />
+              <TouchableOpacity
+                style={{ ...styles.deleteButton, width: "100%" }}
+                onPress={() => onSave(item.id, item.tipo, true)}
+              >
+                <Text style={styles.deleteButtonText}>Eliminar</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
     </View>
   );
 };
@@ -161,7 +164,8 @@ const Profile = () => {
 
       if (isDelete) {
         await remove(itemRef);
-        if (tipo === "products") setProducts((prev) => prev.filter((p) => p.id !== id));
+        if (tipo === "products")
+          setProducts((prev) => prev.filter((p) => p.id !== id));
         else setAvisos((prev) => prev.filter((a) => a.id !== id));
         return;
       }
@@ -172,24 +176,38 @@ const Profile = () => {
       else savedBy[userId] = true;
       await update(itemRef, { savedBy });
 
-      if (tipo === "products") setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, savedBy } : p)));
-      else setAvisos((prev) => prev.map((a) => (a.id === id ? { ...a, savedBy } : a)));
+      if (tipo === "products")
+        setProducts((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, savedBy } : p))
+        );
+      else
+        setAvisos((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, savedBy } : a))
+        );
     } catch (err) {
       console.error("Error al guardar/desguardar:", err);
     }
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ alignItems: "center" }}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ alignItems: "center" }}
+    >
       {/* HEADER */}
-      <View style={styles.header}>
+      <Header />
+
+      {/* Datos del usuario */}
+      <View style={styles.userInfo}>
         <Text style={styles.userName}>{userName}</Text>
         <Text style={styles.userEmail}>{email}</Text>
       </View>
 
       <TouchableOpacity
         style={styles.logoutButton}
-        onPress={() => auth.signOut().then(() => navigation.navigate("Auth"))}
+        onPress={() =>
+          auth.signOut().then(() => navigation.navigate("Auth"))
+        }
       >
         <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
       </TouchableOpacity>
@@ -200,11 +218,31 @@ const Profile = () => {
         <>
           {/* Tabs */}
           <View style={styles.tabsContainer}>
-            <TouchableOpacity style={[styles.tab, activeTab === "products" && styles.activeTab]} onPress={() => setActiveTab("products")}>
-              <Text style={[styles.tabText, activeTab === "products" && styles.activeTabText]}>Productos</Text>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "products" && styles.activeTab]}
+              onPress={() => setActiveTab("products")}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "products" && styles.activeTabText,
+                ]}
+              >
+                Productos
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.tab, activeTab === "avisos" && styles.activeTab]} onPress={() => setActiveTab("avisos")}>
-              <Text style={[styles.tabText, activeTab === "avisos" && styles.activeTabText]}>Avisos</Text>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "avisos" && styles.activeTab]}
+              onPress={() => setActiveTab("avisos")}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "avisos" && styles.activeTabText,
+                ]}
+              >
+                Avisos
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -214,7 +252,12 @@ const Profile = () => {
               <HorizontalRow
                 data={products}
                 onSave={handleSave}
-                onPressItem={(item) => navigation.navigate("DetailPost", { postId: item.id, tipo: "products" })}
+                onPressItem={(item) =>
+                  navigation.navigate("DetailPost", {
+                    postId: item.id,
+                    tipo: "products",
+                  })
+                }
                 isMobile={isMobile}
               />
             </View>
@@ -224,17 +267,30 @@ const Profile = () => {
           {activeTab === "avisos" && avisos.length > 0 && (
             <View style={styles.rowContainer}>
               {avisos.map((item) => (
-                <View key={item.id} style={[styles.avisoCardWrapper, { width: cardWidth }]}>
+                <View
+                  key={item.id}
+                  style={[styles.avisoCardWrapper, { width: cardWidth }]}
+                >
                   <AvisoCard
                     title={item.title}
                     description={item.description}
                     date={new Date(item.createdAt).toLocaleString()}
-                    savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
+                    savedCount={
+                      item.savedBy ? Object.keys(item.savedBy).length : 0
+                    }
                     isSaved={!!item.savedBy?.[auth.currentUser?.uid]}
                     onSave={() => handleSave(item.id, "avisos")}
-                    onPress={() => navigation.navigate("DetailPost", { postId: item.id, tipo: "avisos" })}
+                    onPress={() =>
+                      navigation.navigate("DetailPost", {
+                        postId: item.id,
+                        tipo: "avisos",
+                      })
+                    }
                   />
-                  <TouchableOpacity style={styles.deleteButton} onPress={() => handleSave(item.id, "avisos", true)}>
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleSave(item.id, "avisos", true)}
+                  >
                     <Text style={styles.deleteButtonText}>Eliminar</Text>
                   </TouchableOpacity>
                 </View>
@@ -248,8 +304,8 @@ const Profile = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingVertical: 20 },
-  header: { marginBottom: 20, alignItems: "center" },
+  container: { flex: 1, backgroundColor: colors.background, paddingVertical: 0 }, // Header pega arriba
+  userInfo: { marginBottom: 20, alignItems: "center", paddingTop: 10 },
   userName: { fontSize: 28, fontWeight: "bold", color: colors.textPrimary },
   userEmail: { fontSize: 16, color: colors.textSecondary, marginTop: 5 },
   logoutButton: {
@@ -262,17 +318,47 @@ const styles = StyleSheet.create({
     minWidth: "60%",
   },
   logoutButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  tabsContainer: { flexDirection: "row", justifyContent: "center", marginBottom: 20 },
-  tab: { paddingVertical: 10, paddingHorizontal: 20, borderBottomWidth: 2, borderBottomColor: "transparent" },
+  tabsContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  tab: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
   activeTab: { borderBottomColor: colors.primaryButton },
   tabText: { fontSize: 16, color: colors.textSecondary },
   activeTabText: { color: colors.primaryButton, fontWeight: "bold" },
   rowContainer: { width: "100%", maxWidth: 1200, marginBottom: 25 },
-  scrollButton: { position: "absolute", top: "35%", width: 28, height: 28, backgroundColor: colors.primaryButton, borderRadius: 14, justifyContent: "center", alignItems: "center", zIndex: 10 },
+  scrollButton: {
+    position: "absolute",
+    top: "35%",
+    width: 28,
+    height: 28,
+    backgroundColor: colors.primaryButton,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
   avisoCardWrapper: { marginBottom: 20, alignSelf: "center" },
-  deleteButton: { marginTop: 8, backgroundColor: colors.error, paddingVertical: 8, borderRadius: 5, alignItems: "center" },
+  deleteButton: {
+    marginTop: 8,
+    backgroundColor: colors.error,
+    paddingVertical: 8,
+    borderRadius: 5,
+    alignItems: "center",
+  },
   deleteButtonText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-  loading: { textAlign: "center", marginTop: 50, fontSize: 16, color: colors.textSecondary },
+  loading: {
+    textAlign: "center",
+    marginTop: 50,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
 });
 
 export default Profile;

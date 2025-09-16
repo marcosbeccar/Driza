@@ -13,8 +13,9 @@ import * as ImagePicker from "expo-image-picker";
 import { getDatabase, ref, push, set, get } from "firebase/database";
 import { auth, app } from "../firebase/config";
 import colors from "../styles/colors";
+import Header from "../components/Header";
 
-const CreateAviso = () => {
+const CreateAviso = ({ navigation }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [phone, setPhone] = useState("");
@@ -35,7 +36,7 @@ const CreateAviso = () => {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsMultipleSelection: true,
         quality: 0.8,
-        selectionLimit: 10, // máximo 10 imágenes
+        selectionLimit: 10,
       });
 
       if (!result.canceled) {
@@ -60,13 +61,35 @@ const CreateAviso = () => {
         return;
       }
 
+      // Validaciones
       if (!title.trim()) {
         setErrorMessage("El título es obligatorio.");
         return;
       }
+      if (title.trim().length > 65) {
+        setErrorMessage("El título no puede superar los 65 caracteres.");
+        return;
+      }
+
       if (!description.trim()) {
         setErrorMessage("La descripción es obligatoria.");
         return;
+      }
+      if (description.trim().length > 4000) {
+        setErrorMessage("La descripción no puede superar los 4000 caracteres.");
+        return;
+      }
+
+      if (phone.trim()) {
+        const digitsOnly = phone.replace(/\D/g, "");
+        if (digitsOnly.length < 10) {
+          setErrorMessage("El teléfono es muy corto.");
+          return;
+        }
+        if (digitsOnly.length > 20) {
+          setErrorMessage("El teléfono es muy largo.");
+          return;
+        }
       }
 
       const userRef = ref(db, `users/${currentUser.uid}`);
@@ -78,14 +101,14 @@ const CreateAviso = () => {
       await set(newAvisoRef, {
         title: title.trim(),
         description: description.trim(),
-        phone: phone.trim() || "", // opcional
+        phone: phone.trim() || "",
         email: currentUser.email,
-        images: images, // opcional
+        images: images,
         createdAt: Date.now(),
         userId: currentUser.uid,
         organizacion,
-        estado: "normal", // por defecto
-        savedBy: {}, 
+        estado: "normal",
+        savedBy: {},
       });
 
       setErrorMessage("✅ Aviso publicado exitosamente!");
@@ -100,60 +123,82 @@ const CreateAviso = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Publicar Aviso</Text>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* HEADER CON BACK */}
+      <Header backButton />
 
-      {errorMessage ? (
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Publicar Aviso</Text>
+
+        {errorMessage ? (
+          <Text
+            style={[
+              styles.message,
+              errorMessage.startsWith("✅") ? styles.success : styles.error,
+            ]}
+          >
+            {errorMessage}
+          </Text>
+        ) : null}
+
+        {/* Input Título */}
+        <TextInput
+          style={styles.input}
+          placeholder="Título"
+          placeholderTextColor={colors.textSecondary}
+          value={title}
+          onChangeText={setTitle}
+        />
+        <Text style={[styles.counter, title.length > 65 && styles.counterError]}>
+          {`${title.length}/65`}
+        </Text>
+
+        {/* Input Descripción */}
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          placeholder="Descripción"
+          placeholderTextColor={colors.textSecondary}
+          value={description}
+          onChangeText={setDescription}
+          multiline
+        />
         <Text
           style={[
-            styles.message,
-            errorMessage.startsWith("✅") ? styles.success : styles.error,
+            styles.counter,
+            description.length > 4000 && styles.counterError,
           ]}
         >
-          {errorMessage}
+          {`${description.length}/4000`}
         </Text>
-      ) : null}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Título"
-        placeholderTextColor={colors.textSecondary}
-        value={title}
-        onChangeText={setTitle}
-      />
+        {/* Input Teléfono */}
+        <TextInput
+          style={styles.input}
+          placeholder="Teléfono / WhatsApp (opcional)"
+          placeholderTextColor={colors.textSecondary}
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+        />
 
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        placeholder="Descripción"
-        placeholderTextColor={colors.textSecondary}
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
+        {/* Botón Selección de imágenes */}
+        <TouchableOpacity style={styles.button} onPress={pickImages}>
+          <Text style={styles.buttonText}>Seleccionar Imágenes (opcional)</Text>
+        </TouchableOpacity>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Teléfono / WhatsApp (opcional)"
-        placeholderTextColor={colors.textSecondary}
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-      />
+        {/* Preview imágenes */}
+        <View style={styles.imagePreview}>
+          {images.map((image, index) => (
+            <Image key={index} source={{ uri: image }} style={styles.image} />
+          ))}
+        </View>
 
-      <TouchableOpacity style={styles.button} onPress={pickImages}>
-        <Text style={styles.buttonText}>Seleccionar Imágenes (opcional)</Text>
-      </TouchableOpacity>
-
-      <View style={styles.imagePreview}>
-        {images.map((image, index) => (
-          <Image key={index} source={{ uri: image }} style={styles.image} />
-        ))}
-      </View>
-
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitButtonText}>Publicar Aviso</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {/* Botón publicar */}
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+          <Text style={styles.submitButtonText}>Publicar Aviso</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -177,12 +222,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "600",
   },
-  error: {
-    color: "red",
-  },
-  success: {
-    color: "green",
-  },
+  error: { color: "red" },
+  success: { color: "green" },
   input: {
     borderColor: colors.border,
     borderWidth: 1,
@@ -190,13 +231,17 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     borderRadius: 8,
     padding: 12,
-    marginBottom: 12,
+    marginBottom: 4,
     fontSize: 16,
   },
-  textArea: {
-    height: 120,
-    textAlignVertical: "top",
+  textArea: { height: 120, textAlignVertical: "top" },
+  counter: {
+    alignSelf: "flex-end",
+    marginBottom: 12,
+    color: colors.textSecondary,
+    fontSize: 12,
   },
+  counterError: { color: "red" },
   button: {
     backgroundColor: colors.secondaryButton,
     paddingVertical: 12,
@@ -204,16 +249,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  imagePreview: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 16,
-  },
+  buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  imagePreview: { flexDirection: "row", flexWrap: "wrap", marginBottom: 16 },
   image: {
     width: 100,
     height: 100,
@@ -230,11 +267,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 30,
   },
-  submitButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "700",
-  },
+  submitButtonText: { color: "#fff", fontSize: 18, fontWeight: "700" },
 });
 
 export default CreateAviso;

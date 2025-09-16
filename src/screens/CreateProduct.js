@@ -13,8 +13,9 @@ import * as ImagePicker from "expo-image-picker";
 import { getDatabase, ref, push, set, get } from "firebase/database";
 import { auth, app } from "../firebase/config";
 import colors from "../styles/colors";
+import Header from "../components/Header";
 
-const CreateProduct = () => {
+const CreateProduct = ({ navigation }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [phone, setPhone] = useState("");
@@ -27,7 +28,7 @@ const CreateProduct = () => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        setErrorMessage("Necesitamos permisos para acceder a las imágenes.");
+        setErrorMessage("Necesitamos permisos para acceder a las imágenes. Si está en un teléfono, intente desde una computadora.");
         return;
       }
 
@@ -35,7 +36,7 @@ const CreateProduct = () => {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsMultipleSelection: true,
         quality: 0.8,
-        selectionLimit: 10, // máximo 10 imágenes
+        selectionLimit: 10,
       });
 
       if (!result.canceled) {
@@ -48,7 +49,7 @@ const CreateProduct = () => {
       }
     } catch (err) {
       console.error("Error pickImages:", err);
-      setErrorMessage("No se pudieron seleccionar las imágenes.");
+      setErrorMessage("No se pudieron seleccionar las imágenes. Si está en un teléfono, intente desde una computadora.");
     }
   };
 
@@ -60,16 +61,36 @@ const CreateProduct = () => {
         return;
       }
 
+      // Validaciones
       if (!title.trim()) {
         setErrorMessage("El título es obligatorio.");
         return;
       }
+      if (title.trim().length > 65) {
+        setErrorMessage("El título no puede superar los 65 caracteres.");
+        return;
+      }
+
       if (!description.trim()) {
         setErrorMessage("La descripción es obligatoria.");
         return;
       }
+      if (description.trim().length > 4000) {
+        setErrorMessage("La descripción no puede superar los 4000 caracteres.");
+        return;
+      }
+
       if (!phone.trim()) {
         setErrorMessage("El número de teléfono es obligatorio.");
+        return;
+      }
+      const digitsOnly = phone.replace(/\D/g, "");
+      if (digitsOnly.length < 10) {
+        setErrorMessage("El teléfono es muy corto.");
+        return;
+      }
+      if (digitsOnly.length > 20) {
+        setErrorMessage("El teléfono es muy largo.");
         return;
       }
 
@@ -89,7 +110,7 @@ const CreateProduct = () => {
         userId: currentUser.uid,
         organizacion,
         savedBy: {},
-        estado: "normal", // nuevo campo
+        estado: "normal",
       });
 
       setErrorMessage("✅ Producto publicado exitosamente!");
@@ -104,67 +125,83 @@ const CreateProduct = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Publicar Producto</Text>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <Header backButton />
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Publicar Producto</Text>
 
-      {errorMessage ? (
+        {errorMessage ? (
+          <Text
+            style={[
+              styles.message,
+              errorMessage.startsWith("✅") ? styles.success : styles.error,
+            ]}
+          >
+            {errorMessage}
+          </Text>
+        ) : null}
+
+        {/* Título */}
+        <TextInput
+          style={styles.input}
+          placeholder="Título"
+          placeholderTextColor={colors.textSecondary}
+          value={title}
+          onChangeText={setTitle}
+        />
+        <Text style={[styles.counter, title.length > 65 && styles.counterError]}>
+          {`${title.length}/65`}
+        </Text>
+
+        {/* Descripción */}
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          placeholder="Descripción"
+          placeholderTextColor={colors.textSecondary}
+          value={description}
+          onChangeText={setDescription}
+          multiline
+        />
         <Text
           style={[
-            styles.message,
-            errorMessage.startsWith("✅") ? styles.success : styles.error,
+            styles.counter,
+            description.length > 4000 && styles.counterError,
           ]}
         >
-          {errorMessage}
+          {`${description.length}/4000`}
         </Text>
-      ) : null}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Título"
-        placeholderTextColor={colors.textSecondary}
-        value={title}
-        onChangeText={setTitle}
-      />
+        {/* Teléfono */}
+        <TextInput
+          style={styles.input}
+          placeholder="Teléfono / WhatsApp"
+          placeholderTextColor={colors.textSecondary}
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+        />
 
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        placeholder="Descripción"
-        placeholderTextColor={colors.textSecondary}
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
+        <TouchableOpacity style={styles.button} onPress={pickImages}>
+          <Text style={styles.buttonText}>Seleccionar Imágenes</Text>
+        </TouchableOpacity>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Teléfono / WhatsApp"
-        placeholderTextColor={colors.textSecondary}
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-      />
+        <View style={styles.imagePreview}>
+          {images.map((image, index) => (
+            <Image key={index} source={{ uri: image }} style={styles.image} />
+          ))}
+        </View>
 
-      <TouchableOpacity style={styles.button} onPress={pickImages}>
-        <Text style={styles.buttonText}>Seleccionar Imágenes</Text>
-      </TouchableOpacity>
-
-      <View style={styles.imagePreview}>
-        {images.map((image, index) => (
-          <Image key={index} source={{ uri: image }} style={styles.image} />
-        ))}
-      </View>
-
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitButtonText}>Publicar Producto</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+          <Text style={styles.submitButtonText}>Publicar Producto</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: colors.background,
     padding: 20,
     alignItems: "stretch",
   },
@@ -175,18 +212,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
-  message: {
-    fontSize: 16,
-    marginBottom: 15,
-    textAlign: "center",
-    fontWeight: "600",
-  },
-  error: {
-    color: "red",
-  },
-  success: {
-    color: "green",
-  },
+  message: { fontSize: 16, marginBottom: 15, textAlign: "center", fontWeight: "600" },
+  error: { color: "red" },
+  success: { color: "green" },
   input: {
     borderColor: colors.border,
     borderWidth: 1,
@@ -194,51 +222,18 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     borderRadius: 8,
     padding: 12,
-    marginBottom: 12,
+    marginBottom: 4,
     fontSize: 16,
   },
-  textArea: {
-    height: 120,
-    textAlignVertical: "top",
-  },
-  button: {
-    backgroundColor: colors.secondaryButton,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  imagePreview: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 16,
-  },
-  image: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    marginRight: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  submitButton: {
-    backgroundColor: colors.primaryButton,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  submitButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "700",
-  },
+  textArea: { height: 120, textAlignVertical: "top" },
+  counter: { alignSelf: "flex-end", marginBottom: 12, color: colors.textSecondary, fontSize: 12 },
+  counterError: { color: "red" },
+  button: { backgroundColor: colors.secondaryButton, paddingVertical: 12, borderRadius: 8, alignItems: "center", marginBottom: 16 },
+  buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  imagePreview: { flexDirection: "row", flexWrap: "wrap", marginBottom: 16 },
+  image: { width: 100, height: 100, borderRadius: 8, marginRight: 8, marginBottom: 8, borderWidth: 1, borderColor: colors.border },
+  submitButton: { backgroundColor: colors.primaryButton, paddingVertical: 14, borderRadius: 8, alignItems: "center", marginBottom: 30 },
+  submitButtonText: { color: "#fff", fontSize: 18, fontWeight: "700" },
 });
 
 export default CreateProduct;

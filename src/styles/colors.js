@@ -7,7 +7,7 @@ const colors = {
   textSecondary: '#6C757D', // Color del texto secundario
   border: '#E0E0E0', // Color de los bordes
   error: '#FF0000', // Color para mensajes de error y botones eliminar
-  header:'#05383A',
+  header:'#A47551',
 };
 
 export default colors;

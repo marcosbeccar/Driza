@@ -9,6 +9,7 @@ import * as Font from "expo-font";
 import AuthScreen from "./src/screens/AuthScreen";
 import TabNavigator from "./src/components/TabNavigator";
 import TermsScreen from "./src/screens/TermsScreen";
+import SearchResults from "./src/screens/SearchResults";
 
 const Stack = createNativeStackNavigator();
 
@@ -66,7 +67,10 @@ export default function App() {
             <Stack.Screen name="TermsScreen" component={TermsScreen} />
           </>
         ) : (
+          <>
           <Stack.Screen name="Main" component={TabNavigator} />
+          <Stack.Screen name="SearchResults" component={SearchResults} />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>

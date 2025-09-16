@@ -12,12 +12,13 @@ import {
 import { getDatabase, ref, get, update } from "firebase/database";
 import { auth, app } from "../firebase/config";
 import colors from "../styles/colors";
-import { MaterialIcons } from "@expo/vector-icons"; // ícono de guardar
+import { MaterialIcons } from "@expo/vector-icons";
+import Header from "../components/Header"; // Header importado
 
 const db = getDatabase(app);
 
 const DetailPost = ({ route, navigation }) => {
-  const { postId, tipo = "products" } = route.params; // "products" o "avisos"
+  const { postId, tipo = "products" } = route.params;
   const [post, setPost] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { width } = useWindowDimensions();
@@ -27,9 +28,7 @@ const DetailPost = ({ route, navigation }) => {
     const fetchPost = async () => {
       try {
         const postSnap = await get(ref(db, `${tipo}/${postId}`));
-        if (postSnap.exists()) {
-          setPost(postSnap.val());
-        }
+        if (postSnap.exists()) setPost(postSnap.val());
       } catch (error) {
         console.error("Error al cargar la publicación:", error);
       }
@@ -48,7 +47,6 @@ const DetailPost = ({ route, navigation }) => {
     if (images.length > 0)
       setCurrentImageIndex((prev) => (prev + 1) % images.length);
   };
-
   const prevImage = () => {
     if (images.length > 0)
       setCurrentImageIndex((prev) =>
@@ -86,91 +84,88 @@ const DetailPost = ({ route, navigation }) => {
     : "";
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <TouchableOpacity onPress={() => navigation.goBack()}>
-        <Text style={styles.backButton}>⬅ Volver</Text>
-      </TouchableOpacity>
+    <View style={{ flex: 1 }}>
+      <Header /> {/* Header arriba */}
 
-      <View style={[styles.card, isLargeScreen && styles.cardLarge]}>
-        {/* Imagen o placeholder */}
-        {images.length > 0 ? (
-          <View style={styles.carousel}>
-            <TouchableOpacity onPress={prevImage} style={styles.arrow}>
-              <Text style={styles.arrowText}>{"<"}</Text>
-            </TouchableOpacity>
-            <Image
-              source={{ uri: images[currentImageIndex] }}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Botón de volver alineado a la izquierda */}
+        <TouchableOpacity
+          style={styles.backButtonContainer}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButton}>⬅ Volver</Text>
+        </TouchableOpacity>
+
+        <View style={[styles.card, isLargeScreen && styles.cardLarge]}>
+          {/* Imagen o placeholder */}
+          {images.length > 0 ? (
+            <View style={styles.carousel}>
+              <TouchableOpacity onPress={prevImage} style={styles.arrow}>
+                <Text style={styles.arrowText}>{"<"}</Text>
+              </TouchableOpacity>
+              <Image
+                source={{ uri: images[currentImageIndex] }}
+                style={[
+                  styles.image,
+                  {
+                    width: isLargeScreen ? width * 0.3 : width * 0.7,
+                    height: isLargeScreen ? width * 0.3 : width * 0.7,
+                  },
+                ]}
+              />
+              <TouchableOpacity onPress={nextImage} style={styles.arrow}>
+                <Text style={styles.arrowText}>{">"}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View
               style={[
-                styles.image,
+                styles.imagePlaceholder,
                 {
                   width: isLargeScreen ? width * 0.3 : width * 0.7,
                   height: isLargeScreen ? width * 0.3 : width * 0.7,
                 },
               ]}
-            />
-            <TouchableOpacity onPress={nextImage} style={styles.arrow}>
-              <Text style={styles.arrowText}>{">"}</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
+            >
+              <Text style={styles.noImageText}>Sin imagen</Text>
+            </View>
+          )}
+
+          {/* Texto y datos */}
           <View
-            style={[
-              styles.imagePlaceholder,
-              {
-                width: isLargeScreen ? width * 0.3 : width * 0.7,
-                height: isLargeScreen ? width * 0.3 : width * 0.7,
-              },
-            ]}
+            style={[styles.textSection, isLargeScreen && styles.textSectionLarge]}
           >
-            <Text style={styles.noImageText}>Sin imagen</Text>
-          </View>
-        )}
+            <Text style={styles.title}>{post.title}</Text>
+            <Text style={styles.description}>{post.description}</Text>
+            {post.createdAt && <Text style={styles.date}>Publicado: {formattedDate}</Text>}
 
-        {/* Texto y datos */}
-        <View
-          style={[styles.textSection, isLargeScreen && styles.textSectionLarge]}
-        >
-          <Text style={styles.title}>{post.title}</Text>
-          <Text style={styles.description}>{post.description}</Text>
-          {post.createdAt && (
-            <Text style={styles.date}>Publicado: {formattedDate}</Text>
-          )}
+            <View style={styles.authorBox}>
+              <Text style={styles.authorTitle}>Datos del autor</Text>
+              {post.email && <Text style={styles.authorText}>📧 {post.email}</Text>}
+              {post.phone && <Text style={styles.authorText}>📱 {post.phone}</Text>}
+            </View>
 
-          <View style={styles.authorBox}>
-            <Text style={styles.authorTitle}>Datos del autor</Text>
-            {post.email && (
-              <Text style={styles.authorText}>📧 {post.email}</Text>
+            {post.organizacion === "NO" && (
+              <Text style={styles.warning}>
+                ⚠️ El autor de esta publicación no pertenece a la organización
+              </Text>
             )}
-            {/* Productos: siempre mostrar phone */}
-            {tipo === "products" && post.phone && (
-              <Text style={styles.authorText}>📱 {post.phone}</Text>
-            )}
-            {/* Avisos: mostrar phone solo si existe */}
-            {tipo === "avisos" && post.phone && (
-              <Text style={styles.authorText}>📱 {post.phone}</Text>
-            )}
-          </View>
 
-          {post.organizacion === "NO" && (
-            <Text style={styles.warning}>
-              ⚠️ El autor de esta publicación no pertenece a la organización
-            </Text>
-          )}
-
-          {/* Ícono de guardar */}
-          <View style={styles.saveContainer}>
-            <TouchableOpacity onPress={handleSave}>
-              <MaterialIcons
-                name={isSaved ? "bookmark" : "bookmark-border"}
-                size={32}
-                color={isSaved ? "#05383a" : "#888"}
-              />
-            </TouchableOpacity>
-            <Text style={styles.savedCount}>{savedCount} usuario/s</Text>
+            {/* Ícono de guardar */}
+            <View style={styles.saveContainer}>
+              <TouchableOpacity onPress={handleSave}>
+                <MaterialIcons
+                  name={isSaved ? "bookmark" : "bookmark-border"}
+                  size={32}
+                  color={isSaved ? "#05383a" : "#888"}
+                />
+              </TouchableOpacity>
+              <Text style={styles.savedCount}>{savedCount} usuario/s</Text>
+            </View>
           </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -181,10 +176,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.background,
   },
+  backButtonContainer: {
+    alignSelf: "flex-start", // alineado a la izquierda
+    marginBottom: 15,
+    marginLeft: 20,
+  },
   backButton: {
     fontSize: 16,
     color: colors.primaryButton,
-    marginBottom: 15,
   },
   card: {
     width: "90%",
@@ -213,10 +212,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 15,
   },
-  image: {
-    borderRadius: 10,
-    resizeMode: "cover",
-  },
+  image: { borderRadius: 10, resizeMode: "cover" },
   imagePlaceholder: {
     backgroundColor: colors.border,
     justifyContent: "center",
@@ -224,50 +220,20 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 15,
   },
-  noImageText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-  },
+  noImageText: { color: colors.textSecondary, fontSize: 16 },
   arrow: { paddingHorizontal: 10 },
-  arrowText: {
-    fontSize: 30,
-    color: colors.primaryButton,
-    fontWeight: "bold",
-  },
+  arrowText: { fontSize: 30, color: colors.primaryButton, fontWeight: "bold" },
   textSection: { marginTop: 15 },
   textSectionLarge: { flex: 1, marginTop: 0 },
-  title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    marginBottom: 15,
-    color: colors.textPrimary,
-  },
+  title: { fontSize: 26, fontWeight: "bold", marginBottom: 15, color: colors.textPrimary },
   description: { fontSize: 16, color: colors.textSecondary, marginBottom: 10 },
   date: { fontSize: 14, color: colors.textSecondary, marginBottom: 10 },
-  authorBox: {
-    marginTop: 15,
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: "#f9f9f9",
-  },
-  authorTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 5,
-    color: colors.textPrimary,
-  },
+  authorBox: { marginTop: 15, padding: 10, borderRadius: 8, backgroundColor: "#f9f9f9" },
+  authorTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 5, color: colors.textPrimary },
   authorText: { fontSize: 14, color: colors.textSecondary, marginBottom: 3 },
   warning: { color: "red", fontWeight: "bold", fontSize: 14, marginTop: 10 },
-  saveContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
-    gap: 10,
-  },
-  savedCount: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
+  saveContainer: { flexDirection: "row", alignItems: "center", marginTop: 12, gap: 10 },
+  savedCount: { fontSize: 14, color: colors.textSecondary },
 });
 
 export default DetailPost;
