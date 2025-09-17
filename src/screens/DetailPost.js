@@ -13,7 +13,7 @@ import { getDatabase, ref, get, update } from "firebase/database";
 import { auth, app } from "../firebase/config";
 import colors from "../styles/colors";
 import { MaterialIcons } from "@expo/vector-icons";
-import Header from "../components/Header"; // Header importado
+import Header from "../components/Header";
 
 const db = getDatabase(app);
 
@@ -83,12 +83,17 @@ const DetailPost = ({ route, navigation }) => {
     ? new Date(post.createdAt).toLocaleString()
     : "";
 
+  const handleAuthorPress = () => {
+    if (!post.userId) return;
+    navigation.navigate("Perfil", { userId: post.userId });
+  };
+
   return (
     <View style={{ flex: 1 }}>
-      <Header /> {/* Header arriba */}
+      <Header />
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Botón de volver alineado a la izquierda */}
+        {/* Botón de volver */}
         <TouchableOpacity
           style={styles.backButtonContainer}
           onPress={() => navigation.goBack()}
@@ -97,7 +102,7 @@ const DetailPost = ({ route, navigation }) => {
         </TouchableOpacity>
 
         <View style={[styles.card, isLargeScreen && styles.cardLarge]}>
-          {/* Imagen o placeholder */}
+          {/* Imagen */}
           {images.length > 0 ? (
             <View style={styles.carousel}>
               <TouchableOpacity onPress={prevImage} style={styles.arrow}>
@@ -131,7 +136,7 @@ const DetailPost = ({ route, navigation }) => {
             </View>
           )}
 
-          {/* Texto y datos */}
+          {/* Texto */}
           <View
             style={[styles.textSection, isLargeScreen && styles.textSectionLarge]}
           >
@@ -139,11 +144,16 @@ const DetailPost = ({ route, navigation }) => {
             <Text style={styles.description}>{post.description}</Text>
             {post.createdAt && <Text style={styles.date}>Publicado: {formattedDate}</Text>}
 
-            <View style={styles.authorBox}>
+            {/* Recuadro autor clickeable */}
+            <TouchableOpacity
+              style={styles.authorBox}
+              onPress={handleAuthorPress}
+              activeOpacity={0.8}
+            >
               <Text style={styles.authorTitle}>Datos del autor</Text>
               {post.email && <Text style={styles.authorText}>📧 {post.email}</Text>}
               {post.phone && <Text style={styles.authorText}>📱 {post.phone}</Text>}
-            </View>
+            </TouchableOpacity>
 
             {post.organizacion === "NO" && (
               <Text style={styles.warning}>
@@ -151,7 +161,6 @@ const DetailPost = ({ route, navigation }) => {
               </Text>
             )}
 
-            {/* Ícono de guardar */}
             <View style={styles.saveContainer}>
               <TouchableOpacity onPress={handleSave}>
                 <MaterialIcons
@@ -176,15 +185,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.background,
   },
-  backButtonContainer: {
-    alignSelf: "flex-start", // alineado a la izquierda
-    marginBottom: 15,
-    marginLeft: 20,
-  },
-  backButton: {
-    fontSize: 16,
-    color: colors.primaryButton,
-  },
+  backButtonContainer: { alignSelf: "flex-start", marginBottom: 15, marginLeft: 20 },
+  backButton: { fontSize: 16, color: colors.primaryButton },
   card: {
     width: "90%",
     backgroundColor: "#fff",
@@ -196,30 +198,11 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 5,
   },
-  cardLarge: {
-    flexDirection: "row",
-    gap: 20,
-  },
-  loading: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginTop: 50,
-  },
-  carousel: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 15,
-  },
+  cardLarge: { flexDirection: "row", gap: 20 },
+  loading: { fontSize: 16, color: colors.textSecondary, textAlign: "center", marginTop: 50 },
+  carousel: { flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 15 },
   image: { borderRadius: 10, resizeMode: "cover" },
-  imagePlaceholder: {
-    backgroundColor: colors.border,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 10,
-    marginBottom: 15,
-  },
+  imagePlaceholder: { backgroundColor: colors.border, justifyContent: "center", alignItems: "center", borderRadius: 10, marginBottom: 15 },
   noImageText: { color: colors.textSecondary, fontSize: 16 },
   arrow: { paddingHorizontal: 10 },
   arrowText: { fontSize: 30, color: colors.primaryButton, fontWeight: "bold" },

@@ -1,6 +1,6 @@
 // filepath: src/screens/AvisosPage.js
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, StyleSheet, View, Dimensions } from "react-native";
+import { ScrollView, Text, StyleSheet, View, Dimensions, TouchableOpacity } from "react-native";
 import {
   getDatabase,
   ref,
@@ -13,12 +13,13 @@ import {
 import { app, auth } from "../firebase/config";
 import colors from "../styles/colors";
 import AvisoCard from "../components/AvisoCard";
-import Header from "../components/Header"; // <--- agregado
+import Header from "../components/Header";
 
 const { width } = Dimensions.get("window");
 
 const AvisosPage = ({ navigation }) => {
   const [avisos, setAvisos] = useState([]);
+  const [showOnlyWithOrg, setShowOnlyWithOrg] = useState(false);
   const db = getDatabase(app);
 
   useEffect(() => {
@@ -29,7 +30,7 @@ const AvisosPage = ({ navigation }) => {
         const data = snapshot.val();
         const loadedAvisos = Object.keys(data)
           .map((key) => ({ id: key, ...data[key] }))
-          .sort((a, b) => b.createdAt - a.createdAt); // más recientes primero
+          .sort((a, b) => b.createdAt - a.createdAt);
         setAvisos(loadedAvisos);
       } else {
         setAvisos([]);
@@ -71,19 +72,41 @@ const AvisosPage = ({ navigation }) => {
     }
   };
 
+  // --- aplicar filtro de organizaciones ---
+  let avisosFiltrados = [...avisos];
+  if (showOnlyWithOrg) {
+    avisosFiltrados = avisosFiltrados.filter(
+      (a) => a.organizacion && a.organizacion !== "NO"
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
-      <Header /> {/* <-- agregado */}
+      <Header />
+
+      {/* Botón de filtro (mismo que en MainPage) */}
+      <View style={styles.filterButtonWrapper}>
+        <TouchableOpacity
+          onPress={() => setShowOnlyWithOrg((prev) => !prev)}
+          style={styles.filterButton}
+        >
+          <Text style={styles.filterButtonText}>
+            {showOnlyWithOrg ? "Mostrar todos" : "Solo organizaciones"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.innerContainer}>
-        {avisos.length === 0 ? (
+        {avisosFiltrados.length === 0 ? (
           <Text style={styles.emptyText}>No hay avisos publicados aún.</Text>
         ) : (
-          avisos.map((aviso) => (
+          avisosFiltrados.map((aviso) => (
             <AvisoCard
               key={aviso.id}
               title={aviso.title}
               description={aviso.description}
               date={new Date(aviso.createdAt).toLocaleString()}
+              organizacion={aviso.organizacion}
               savedCount={aviso.savedBy ? Object.keys(aviso.savedBy).length : 0}
               isSaved={!!aviso.savedBy?.[auth.currentUser.uid]}
               onSave={() => handleSaveAviso(aviso.id)}
@@ -104,7 +127,7 @@ const AvisosPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 0, // ⬅ sin espacio arriba
+    paddingTop: 0,
     paddingBottom: 10,
     backgroundColor: colors.background,
   },
@@ -118,6 +141,25 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: "center",
     marginTop: 50,
+  },
+  filterButtonWrapper: {
+    width: "100%",
+    maxWidth: 1200,
+    alignSelf: "center",
+    alignItems: "flex-end",
+    paddingTop: 15,
+    marginBottom: 15,
+  },
+  filterButton: {
+    backgroundColor: colors.primaryButton,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  filterButtonText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
   },
 });
 

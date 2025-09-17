@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { FontAwesome } from "@expo/vector-icons"; 
 import colors from "../styles/colors";
 
 const Post = ({
@@ -10,10 +11,12 @@ const Post = ({
   description,
   savedCount = 0,
   isSaved = false,
+  organizacion = "NO",
   onSave,
   onPress,
 }) => {
   const [windowWidth, setWindowWidth] = useState(Dimensions.get("window").width);
+  const [showTooltip, setShowTooltip] = useState(false); // <--- para tooltip
 
   useEffect(() => {
     const handleResize = ({ window }) => setWindowWidth(window.width);
@@ -28,21 +31,37 @@ const Post = ({
 
   return (
     <TouchableOpacity
-      style={[styles.container, isMobile ? styles.mobileContainer : styles.desktopContainer, { width: cardWidth, height: cardHeight }]}
+      style={[
+        styles.container,
+        isMobile ? styles.mobileContainer : styles.desktopContainer,
+        { width: cardWidth, height: cardHeight },
+      ]}
       onPress={onPress}
       activeOpacity={0.8}
     >
       {portada ? (
-        <Image source={{ uri: portada }} style={isMobile ? styles.mobileImage : styles.desktopImage} resizeMode="cover" />
+        <Image
+          source={{ uri: portada }}
+          style={isMobile ? styles.mobileImage : styles.desktopImage}
+          resizeMode="cover"
+        />
       ) : (
-        <View style={[isMobile ? styles.mobileImage : styles.desktopImage, styles.imagePlaceholder]}>
+        <View
+          style={[
+            isMobile ? styles.mobileImage : styles.desktopImage,
+            styles.imagePlaceholder,
+          ]}
+        >
           <Text style={styles.noImageText}>Sin imagen</Text>
         </View>
       )}
 
       <View style={styles.textContainer}>
         <View style={styles.titleRow}>
-          <Text style={[styles.title, isMobile && styles.mobileTitle]} numberOfLines={2}>
+          <Text
+            style={[styles.title, isMobile && styles.mobileTitle]}
+            numberOfLines={2}
+          >
             {title}
           </Text>
           {onSave && (
@@ -56,13 +75,43 @@ const Post = ({
           )}
         </View>
 
-        <Text style={[styles.description, isMobile && styles.mobileDescription]} numberOfLines={2}>
+        <Text
+          style={[styles.description, isMobile && styles.mobileDescription]}
+          numberOfLines={2}
+        >
           {description}
         </Text>
 
-        <Text style={[styles.savedCount, isMobile && styles.mobileSavedCount]}>
-          Guardado por {savedCount} usuario/s
-        </Text>
+        {/* fila inferior con guardados + advertencia */}
+        <View style={styles.bottomRow}>
+          <Text
+            style={[styles.savedCount, isMobile && styles.mobileSavedCount]}
+          >
+            Guardado por {savedCount} usuario/s
+          </Text>
+
+          {organizacion === "NO" && (
+            <View
+              style={{ position: "relative" }}
+              onMouseEnter={() => setShowTooltip(true)}
+              onMouseLeave={() => setShowTooltip(false)}
+            >
+              <FontAwesome
+                name="exclamation-triangle"
+                size={14}
+                color="red"
+                style={styles.warningIcon}
+              />
+              {showTooltip && (
+                <View style={styles.tooltip}>
+                  <Text style={styles.tooltipText}>
+                    El autor de este producto no pertenece a la organización
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -85,27 +134,53 @@ const styles = StyleSheet.create({
   mobileContainer: { flexDirection: "column" },
   desktopImage: { width: 120, height: 120, borderRadius: 8, margin: 8 },
   mobileImage: { width: "100%", height: 120, borderRadius: 8, marginBottom: 6 },
-  imagePlaceholder: { backgroundColor: "#eee", justifyContent: "center", alignItems: "center" },
+  imagePlaceholder: {
+    backgroundColor: "#eee",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   noImageText: { color: colors.textSecondary, fontSize: 14 },
   textContainer: { flex: 1, paddingHorizontal: 6, justifyContent: "center" },
-  titleRow: { 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    alignItems: "center", 
-    marginBottom: 4 
+  titleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
   },
-  title: { 
-    fontSize: 16, 
-    fontWeight: "700", 
-    color: colors.textPrimary, 
-    flexShrink: 1 
+  title: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.textPrimary,
+    flexShrink: 1,
   },
   mobileTitle: { fontSize: 14, flex: 1 },
   description: { fontSize: 14, color: colors.textSecondary },
   mobileDescription: { fontSize: 12, marginTop: 2 },
-  savedCount: { fontSize: 12, color: "#228bfa", marginTop: 6 },
+  bottomRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 6,
+  },
+  savedCount: { fontSize: 12, color: "#228bfa" },
   mobileSavedCount: { fontSize: 10 },
   iconButtonMobile: { marginLeft: 6, alignSelf: "center" },
+  warningIcon: { marginLeft: 8 },
+  tooltip: {
+    position: "absolute",
+    bottom: "120%", // aparece arriba del ícono
+    right: 0,
+    backgroundColor: "#333",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    maxWidth: 200,
+    zIndex: 1000,
+  },
+  tooltipText: {
+    color: "#fff",
+    fontSize: 12,
+  },
 });
 
 export default Post;

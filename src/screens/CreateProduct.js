@@ -156,7 +156,7 @@ const CreateProduct = ({ navigation }) => {
         {/* Descripción */}
         <TextInput
           style={[styles.input, styles.textArea]}
-          placeholder="Descripción"
+          placeholder="Descripción. Agregá palabras clave para aparecer en los resultados de búsqueda!"
           placeholderTextColor={colors.textSecondary}
           value={description}
           onChangeText={setDescription}

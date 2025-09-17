@@ -23,11 +23,81 @@ import Post from "../components/Post";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Header from "../components/Header";
 
+// --- Nuevo componente para filas ---
+const HorizontalRow = ({ data, isMobile, onSave, navigation }) => {
+  const scrollRef = useRef(null);
+  const scrollX = useRef(0);
+  const [hovered, setHovered] = useState(false);
+
+  const scrollBy = (offset) => {
+    if (scrollRef.current) {
+      const newX = Math.max(0, scrollX.current + offset);
+      scrollRef.current.scrollTo({ x: newX, animated: true });
+      scrollX.current = newX;
+    }
+  };
+
+  return (
+    <View
+      style={{ position: "relative", marginBottom: 10 }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {!isMobile && hovered && (
+        <>
+          <TouchableOpacity
+            style={[styles.scrollButton, { left: -12 }]}
+            onPress={() => scrollBy(-250)}
+          >
+            <Ionicons name="chevron-back" size={20} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.scrollButton, { right: -12 }]}
+            onPress={() => scrollBy(250)}
+          >
+            <Ionicons name="chevron-forward" size={20} color="#fff" />
+          </TouchableOpacity>
+        </>
+      )}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 10 }}
+        ref={scrollRef}
+        onScroll={(e) => {
+          scrollX.current = e.nativeEvent.contentOffset.x;
+        }}
+        scrollEventThrottle={16}
+      >
+        {data.map((product) => (
+          <View key={product.id} style={{ marginRight: 10 }}>
+            <Post
+              title={product.title}
+              images={product.images}
+              description={product.description}
+              organizacion={product.organizacion}
+              savedCount={
+                product.savedBy ? Object.keys(product.savedBy).length : 0
+              }
+              isSaved={!!product.savedBy?.[auth.currentUser.uid]}
+              onSave={() => onSave(product.id)}
+              onPress={() =>
+                navigation.navigate("DetailPost", { postId: product.id })
+              }
+            />
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
+
 const MainPage = ({ navigation }) => {
   const [products, setProducts] = useState([]);
   const [windowWidth, setWindowWidth] = useState(
     Dimensions.get("window").width
   );
+  const [showOnlyWithOrg, setShowOnlyWithOrg] = useState(false);
   const db = getDatabase(app);
 
   useEffect(() => {
@@ -85,81 +155,20 @@ const MainPage = ({ navigation }) => {
     }
   };
 
+  // --- Filtrados ---
   const promocionados = products.filter((p) => p.estado === "promocionado");
-  const normales = products.filter((p) => !p.estado || p.estado === "normal");
+
+  let normales = products.filter((p) => !p.estado || p.estado === "normal");
+  if (showOnlyWithOrg) {
+    normales = normales.filter((p) => p.organizacion && p.organizacion !== "NO");
+  }
+
   const normalRows = [[], [], []];
   normales.forEach((product, idx) => normalRows[idx % 3].push(product));
 
-  const renderHorizontalRow = (data) => {
-    const scrollRef = useRef(null);
-    const scrollX = useRef(0);
-    const [hovered, setHovered] = useState(false);
-
-    const scrollBy = (offset) => {
-      if (scrollRef.current) {
-        const newX = Math.max(0, scrollX.current + offset);
-        scrollRef.current.scrollTo({ x: newX, animated: true });
-        scrollX.current = newX;
-      }
-    };
-
-    return (
-      <View
-        style={{ position: "relative", marginBottom: 10 }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
-        {!isMobile && hovered && (
-          <>
-            <TouchableOpacity
-              style={[styles.scrollButton, { left: -12 }]}
-              onPress={() => scrollBy(-250)}
-            >
-              <Ionicons name="chevron-back" size={20} color="#fff" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.scrollButton, { right: -12 }]}
-              onPress={() => scrollBy(250)}
-            >
-              <Ionicons name="chevron-forward" size={20} color="#fff" />
-            </TouchableOpacity>
-          </>
-        )}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 10 }}
-          ref={scrollRef}
-          onScroll={(e) => {
-            scrollX.current = e.nativeEvent.contentOffset.x;
-          }}
-          scrollEventThrottle={16}
-        >
-          {data.map((product) => (
-            <View key={product.id} style={{ marginRight: 10 }}>
-              <Post
-                title={product.title}
-                images={product.images}
-                description={product.description}
-                savedCount={
-                  product.savedBy ? Object.keys(product.savedBy).length : 0
-                }
-                isSaved={!!product.savedBy?.[auth.currentUser.uid]}
-                onSave={() => handleSaveProduct(product.id)}
-                onPress={() =>
-                  navigation.navigate("DetailPost", { postId: product.id })
-                }
-              />
-            </View>
-          ))}
-        </ScrollView>
-      </View>
-    );
-  };
-
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Header siempre arriba */}
+      {/* Header */}
       <Header />
 
       {/* Contenido scrollable */}
@@ -168,18 +177,48 @@ const MainPage = ({ navigation }) => {
         contentContainerStyle={{ alignItems: "center" }}
         showsVerticalScrollIndicator={false}
       >
+        {/* Toggle filtro */}
+        <View style={styles.filterButtonWrapper}>
+          <TouchableOpacity
+            onPress={() => setShowOnlyWithOrg((prev) => !prev)}
+            style={styles.filterButton}
+          >
+            <Text style={styles.filterButtonText}>
+              {showOnlyWithOrg
+                ? "Mostrar todos"
+                : "Solo organizaciones"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Promocionados */}
         {promocionados.length > 0 && (
           <View style={styles.rowContainer}>
             <Text style={styles.rowTitle}>Promocionados</Text>
-            {renderHorizontalRow(promocionados)}
+            <HorizontalRow
+              data={promocionados}
+              isMobile={isMobile}
+              onSave={handleSaveProduct}
+              navigation={navigation}
+            />
           </View>
         )}
-        {normalRows.map((row, idx) => (
-          <View style={styles.rowContainer} key={idx}>
-            <Text style={styles.rowTitle}>Normal - Fila {idx + 1}</Text>
-            {renderHorizontalRow(row)}
-          </View>
-        ))}
+
+        {/* Filas normales */}
+        {normalRows.map((row, idx) =>
+          row.length > 0 ? (
+            <View style={styles.rowContainer} key={idx}>
+              <Text style={styles.rowTitle}>Normal - Fila {idx + 1}</Text>
+              <HorizontalRow
+                data={row}
+                isMobile={isMobile}
+                onSave={handleSaveProduct}
+                navigation={navigation}
+              />
+            </View>
+          ) : null
+        )}
+
         <TouchableOpacity
           onPress={() => navigation.navigate("Avisos")}
           style={styles.linkContainer}
@@ -223,6 +262,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
+  },
+  filterButtonWrapper: {
+    width: "100%",
+    maxWidth: 1200,
+    alignItems: "flex-end",
+    paddingTop: 15,
+    marginBottom: 15,
+  },
+  filterButton: {
+    backgroundColor: colors.primaryButton,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  filterButtonText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
   },
 });
 
