@@ -82,7 +82,7 @@ const HorizontalRow = ({ data, isMobile, onSave, navigation }) => {
               isSaved={!!product.savedBy?.[auth.currentUser.uid]}
               onSave={() => onSave(product.id)}
               onPress={() =>
-                navigation.navigate("DetailPost", { postId: product.id })
+                navigation.navigate("Driza - Detalle publicacion", { postId: product.id })
               }
             />
           </View>

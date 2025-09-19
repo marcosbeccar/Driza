@@ -26,14 +26,14 @@ const CreateMenu = () => {
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate("CreateProduct")}
+          onPress={() => navigation.navigate("Driza - Publicar producto")}
         >
           <Text style={styles.buttonText}>Producto</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate("CreateAviso")}
+          onPress={() => navigation.navigate("Driza - Publicar aviso")}
         >
           <Text style={styles.buttonText}>Aviso</Text>
         </TouchableOpacity>

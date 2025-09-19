@@ -8,6 +8,7 @@ const colors = {
   border: '#E0E0E0', // Color de los bordes
   error: '#FF0000', // Color para mensajes de error y botones eliminar
   header:'#A47551',
+  verde:'#05383A',
 };
 
 export default colors;

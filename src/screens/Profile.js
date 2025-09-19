@@ -254,7 +254,7 @@ const Profile = () => {
                 data={products}
                 onSave={handleSave}
                 onPressItem={(item) =>
-                  navigation.navigate("DetailPost", {
+                  navigation.navigate("Driza - Detalle publicacion", {
                     postId: item.id,
                     tipo: "products",
                   })
@@ -276,7 +276,7 @@ const Profile = () => {
                     isSaved={!!item.savedBy?.[auth.currentUser?.uid]}
                     onSave={() => handleSave(item.id, "avisos")}
                     onPress={() =>
-                      navigation.navigate("DetailPost", { postId: item.id, tipo: "avisos" })
+                      navigation.navigate("Driza - Detalle publicacion", { postId: item.id, tipo: "avisos" })
                     }
                     organizacion={item.organizacion}
                   />

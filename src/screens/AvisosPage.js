@@ -111,7 +111,7 @@ const AvisosPage = ({ navigation }) => {
               isSaved={!!aviso.savedBy?.[auth.currentUser.uid]}
               onSave={() => handleSaveAviso(aviso.id)}
               onPress={() =>
-                navigation.navigate("DetailPost", {
+                navigation.navigate("Driza - Detalle publicacion", {
                   postId: aviso.id,
                   tipo: "avisos",
                 })

@@ -194,7 +194,7 @@ const SavedPosts = () => {
             data={savedProducts}
             onSave={toggleSave}
             onPressItem={(item) =>
-              navigation.navigate("DetailPost", {
+              navigation.navigate("Driza - Detalle publicacion", {
                 postId: item.id,
                 tipo: "products",
               })
@@ -216,7 +216,7 @@ const SavedPosts = () => {
                 isSaved={!!item.savedBy?.[auth.currentUser.uid]}
                 onSave={() => toggleSave(item.id, item.tipo)}
                 onPress={() =>
-                  navigation.navigate("DetailPost", {
+                  navigation.navigate("Driza - Detalle publicacion", {
                     postId: item.id,
                     tipo: "avisos",
                   })

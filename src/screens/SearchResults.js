@@ -129,7 +129,7 @@ const SearchResults = ({ route, navigation }) => {
               isSaved={!!item.savedBy?.[auth.currentUser?.uid]}
               onSave={() => {}}
               onPress={() =>
-                navigation.navigate("DetailPost", {
+                navigation.navigate("Driza - Detalle publicacion", {
                   postId: item.id,
                   tipo: "products",
                 })
@@ -158,7 +158,7 @@ const SearchResults = ({ route, navigation }) => {
                 isSaved={!!item.savedBy?.[auth.currentUser?.uid]}
                 onSave={() => {}}
                 onPress={() =>
-                  navigation.navigate("DetailPost", {
+                  navigation.navigate("Driza - Detalle publicacion", {
                     postId: item.id,
                     tipo: "avisos",
                   })

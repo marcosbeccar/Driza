@@ -36,28 +36,28 @@ const TabNavigator = () => {
       }}
     >
       <Tab.Screen
-        name="Driza - Inicio"
+        name="Driza"
         component={MainPage}
         options={{
           tabBarIcon: () => <FontAwesome name="home" size={24} color="black" />,
         }}
       />
       <Tab.Screen
-        name="Driza - Avisos"
+        name="Avisos"
         component={AvisosPage}
         options={{
           tabBarIcon: () => <FontAwesome name="bell" size={24} color="black" />,
         }}
       />
       <Tab.Screen
-        name="Driza - Crear publicación"
+        name="Crear"
         component={CreateMenu}
         options={{
           tabBarIcon: () => <FontAwesome name="plus" size={24} color="black" />,
         }}
       />
       <Tab.Screen
-        name="Driza - Guardados"
+        name="Guardados"
         component={SavedPosts}
         options={{
           tabBarIcon: () => (
@@ -66,7 +66,7 @@ const TabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Driza - Perfil"
+        name="Perfil"
         component={Profile}
         options={{
           tabBarIcon: () => <FontAwesome name="user" size={24} color="black" />,
@@ -76,7 +76,7 @@ const TabNavigator = () => {
       {/* Admin solo si es driza.compraventa@gmail.com */}
       {isAdmin && (
         <Tab.Screen
-          name="Driza - Admin"
+          name="Admin"
           component={AdminScreen}
           options={{
             tabBarIcon: () => (
@@ -88,7 +88,7 @@ const TabNavigator = () => {
 
       {/* Hidden screens */}
       <Tab.Screen
-        name="Driza"
+        name="Driza - Detalle publicacion"
         component={DetailPost}
         options={{
           tabBarButton: () => null,
@@ -113,11 +113,12 @@ const TabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Driza - Resultados de búsqueda"
+        name="Driza - Resultados de busqueda"
         component={SearchResults}
         options={{
           tabBarButton: () => null,
           tabBarItemStyle: { display: "none" },
+          headerShown: false,
         }}
       />
     </Tab.Navigator>

@@ -69,7 +69,7 @@ export default function App() {
         ) : (
           <>
           <Stack.Screen name="Main" component={TabNavigator} />
-          <Stack.Screen name="SearchResults" component={SearchResults} />
+          
           </>
         )}
       </Stack.Navigator>

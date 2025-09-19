@@ -14,7 +14,7 @@ const Header = () => {
 
   const handleSearch = () => {
     if (query.trim().length > 0) {
-      navigation.navigate("SearchResults", { query });
+      navigation.navigate("Driza - Resultados de busqueda", { query });
       setQuery("");
     }
   };

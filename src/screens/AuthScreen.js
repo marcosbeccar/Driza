@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   logo: {
-    height: 80,
+    height: 120,
     marginBottom: 15,
     resizeMode: "contain",
   },
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 10,
-    color: colors.textPrimary,
+    color: colors.verde,
     textAlign: "center",
   },
   subtitle: {
@@ -195,6 +195,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 8,
     width: "100%",
+    maxWidth: 1000,
     alignItems: "center",
   },
   buttonDisabled: {
