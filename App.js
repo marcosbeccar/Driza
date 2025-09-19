@@ -63,7 +63,7 @@ export default function App() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
           <>
-            <Stack.Screen name="Auth" component={AuthScreen} />
+            <Stack.Screen name="Driza" component={AuthScreen} />
             <Stack.Screen name="TermsScreen" component={TermsScreen} />
           </>
         ) : (

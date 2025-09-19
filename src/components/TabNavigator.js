@@ -36,28 +36,28 @@ const TabNavigator = () => {
       }}
     >
       <Tab.Screen
-        name="Inicio"
+        name="Driza - Inicio"
         component={MainPage}
         options={{
           tabBarIcon: () => <FontAwesome name="home" size={24} color="black" />,
         }}
       />
       <Tab.Screen
-        name="Avisos"
+        name="Driza - Avisos"
         component={AvisosPage}
         options={{
           tabBarIcon: () => <FontAwesome name="bell" size={24} color="black" />,
         }}
       />
       <Tab.Screen
-        name="Crear"
+        name="Driza - Crear publicación"
         component={CreateMenu}
         options={{
           tabBarIcon: () => <FontAwesome name="plus" size={24} color="black" />,
         }}
       />
       <Tab.Screen
-        name="Guardados"
+        name="Driza - Guardados"
         component={SavedPosts}
         options={{
           tabBarIcon: () => (
@@ -66,7 +66,7 @@ const TabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Perfil"
+        name="Driza - Perfil"
         component={Profile}
         options={{
           tabBarIcon: () => <FontAwesome name="user" size={24} color="black" />,
@@ -76,7 +76,7 @@ const TabNavigator = () => {
       {/* Admin solo si es driza.compraventa@gmail.com */}
       {isAdmin && (
         <Tab.Screen
-          name="Admin"
+          name="Driza - Admin"
           component={AdminScreen}
           options={{
             tabBarIcon: () => (
@@ -88,7 +88,7 @@ const TabNavigator = () => {
 
       {/* Hidden screens */}
       <Tab.Screen
-        name="DetailPost"
+        name="Driza"
         component={DetailPost}
         options={{
           tabBarButton: () => null,
@@ -97,7 +97,7 @@ const TabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="CreateProduct"
+        name="Driza - Publicar producto"
         component={CreateProduct}
         options={{
           tabBarButton: () => null,
@@ -105,7 +105,7 @@ const TabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="CreateAviso"
+        name="Driza - Publicar aviso"
         component={CreateAviso}
         options={{
           tabBarButton: () => null,
@@ -113,7 +113,7 @@ const TabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="SearchResults"
+        name="Driza - Resultados de búsqueda"
         component={SearchResults}
         options={{
           tabBarButton: () => null,
