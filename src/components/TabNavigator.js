@@ -14,6 +14,7 @@ import CreateAviso from "../screens/CreateAviso";
 import AvisosPage from "../screens/AvisosPage";
 import AdminScreen from "../screens/AdminScreen";
 import SearchResults from "../screens/SearchResults"; 
+import Header from "../components/Header";
 
 const Tab = createBottomTabNavigator();
 
@@ -107,6 +108,14 @@ const TabNavigator = () => {
       <Tab.Screen
         name="Driza - Publicar aviso"
         component={CreateAviso}
+        options={{
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: "none" },
+        }}
+      />
+      <Tab.Screen
+        name="Header"
+        component={Header}
         options={{
           tabBarButton: () => null,
           tabBarItemStyle: { display: "none" },

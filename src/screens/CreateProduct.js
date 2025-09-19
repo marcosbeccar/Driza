@@ -21,6 +21,7 @@ const CreateProduct = ({ navigation }) => {
   const [phone, setPhone] = useState("");
   const [images, setImages] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false); // NUEVO: controla doble submit
 
   const db = getDatabase(app);
 
@@ -54,43 +55,53 @@ const CreateProduct = ({ navigation }) => {
   };
 
   const handleSubmit = async () => {
+    if (loading) return; // evita doble submit
+    setLoading(true);
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) {
         setErrorMessage("Debes iniciar sesión para crear una publicación.");
+        setLoading(false);
         return;
       }
 
       // Validaciones
       if (!title.trim()) {
         setErrorMessage("El título es obligatorio.");
+        setLoading(false);
         return;
       }
       if (title.trim().length > 65) {
         setErrorMessage("El título no puede superar los 65 caracteres.");
+        setLoading(false);
         return;
       }
 
       if (!description.trim()) {
         setErrorMessage("La descripción es obligatoria.");
+        setLoading(false);
         return;
       }
       if (description.trim().length > 4000) {
         setErrorMessage("La descripción no puede superar los 4000 caracteres.");
+        setLoading(false);
         return;
       }
 
       if (!phone.trim()) {
         setErrorMessage("El número de teléfono es obligatorio.");
+        setLoading(false);
         return;
       }
       const digitsOnly = phone.replace(/\D/g, "");
       if (digitsOnly.length < 10) {
         setErrorMessage("El teléfono es muy corto.");
+        setLoading(false);
         return;
       }
       if (digitsOnly.length > 20) {
         setErrorMessage("El teléfono es muy largo.");
+        setLoading(false);
         return;
       }
 
@@ -121,6 +132,8 @@ const CreateProduct = ({ navigation }) => {
     } catch (error) {
       console.error("Error creando el producto:", error);
       setErrorMessage("Ocurrió un error al crear el producto.");
+    } finally {
+      setLoading(false); // vuelve a habilitar el botón
     }
   };
 
@@ -141,7 +154,6 @@ const CreateProduct = ({ navigation }) => {
           </Text>
         ) : null}
 
-        {/* Título */}
         <TextInput
           style={styles.input}
           placeholder="Título"
@@ -153,7 +165,6 @@ const CreateProduct = ({ navigation }) => {
           {`${title.length}/65`}
         </Text>
 
-        {/* Descripción */}
         <TextInput
           style={[styles.input, styles.textArea]}
           placeholder="Descripción. Agregá palabras clave para aparecer en los resultados de búsqueda!"
@@ -163,15 +174,11 @@ const CreateProduct = ({ navigation }) => {
           multiline
         />
         <Text
-          style={[
-            styles.counter,
-            description.length > 4000 && styles.counterError,
-          ]}
+          style={[styles.counter, description.length > 4000 && styles.counterError]}
         >
           {`${description.length}/4000`}
         </Text>
 
-        {/* Teléfono */}
         <TextInput
           style={styles.input}
           placeholder="Teléfono / WhatsApp"
@@ -191,8 +198,14 @@ const CreateProduct = ({ navigation }) => {
           ))}
         </View>
 
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Publicar Producto</Text>
+        <TouchableOpacity
+          style={[styles.submitButton, loading && { opacity: 0.7 }]}
+          onPress={handleSubmit}
+          disabled={loading} // DESHABILITA mientras se procesa
+        >
+          <Text style={styles.submitButtonText}>
+            {loading ? "Publicando..." : "Publicar Producto"}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

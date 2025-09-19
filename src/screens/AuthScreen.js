@@ -14,6 +14,7 @@ import {
   setPersistence,
   browserLocalPersistence,
   onAuthStateChanged,
+  signOut,
 } from "firebase/auth";
 import { ref, set, get } from "firebase/database";
 import { auth, db } from "../firebase/config";
@@ -23,12 +24,16 @@ import { useNavigation } from "@react-navigation/native";
 const AuthScreen = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
   const navigation = useNavigation();
 
   // 🔹 Escuchar estado de auth
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) await handleUser(user);
+      if (user) {
+        const allowed = await handleUser(user);
+        if (!allowed) return; // detiene flujo si baneado
+      }
       setLoading(false);
     });
     return unsubscribe;
@@ -49,12 +54,23 @@ const AuthScreen = () => {
     }
   };
 
-  // 🔹 Registrar usuario en DB si no existe
+  // 🔹 Registrar usuario en DB si no existe y verificar baneados
   const handleUser = async (user) => {
-    if (!user) return;
-    const userId = user.uid;
+    if (!user) return false;
 
-    const userRef = ref(db, `users/${userId}`);
+    // Verificar si el email está baneado
+    const bannedRef = ref(db, `baneados/${user.email.replace(/\./g, "_")}`);
+    const bannedSnap = await get(bannedRef);
+
+    if (bannedSnap.exists() && bannedSnap.val()?.banned) {
+      console.warn("🚫 Usuario baneado intentó iniciar sesión:", user.email);
+      await signOut(auth); // cerrar sesión
+      setErrorMessage("Tu cuenta ha sido baneada y no puedes iniciar sesión.");
+      return false;
+    }
+
+    // Si no está baneado, crear usuario en DB si no existe
+    const userRef = ref(db, `users/${user.uid}`);
     const snapshot = await get(userRef);
 
     if (!snapshot.exists()) {
@@ -74,6 +90,8 @@ const AuthScreen = () => {
     } else {
       console.log("ℹ️ Usuario ya existía en DB, no se sobrescribió.");
     }
+
+    return true;
   };
 
   // 🔹 Loader mientras se inicializa
@@ -98,6 +116,10 @@ const AuthScreen = () => {
       <Text style={styles.subtitle}>
         Inicia sesión o regístrate con tu cuenta de Google
       </Text>
+
+      {errorMessage ? (
+        <Text style={[styles.message, styles.error]}>{errorMessage}</Text>
+      ) : null}
 
       {/* Checkbox términos */}
       <TouchableOpacity
@@ -165,6 +187,13 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     textAlign: "center",
   },
+  message: {
+    fontSize: 16,
+    marginBottom: 15,
+    textAlign: "center",
+    fontWeight: "600",
+  },
+  error: { color: "red" },
   termsContainer: {
     flexDirection: "row",
     alignItems: "center",

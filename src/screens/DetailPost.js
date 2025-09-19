@@ -8,6 +8,8 @@ import {
   StyleSheet,
   ScrollView,
   useWindowDimensions,
+  Modal,
+  PanResponder,
 } from "react-native";
 import { getDatabase, ref, get, update } from "firebase/database";
 import { auth, app } from "../firebase/config";
@@ -21,6 +23,7 @@ const DetailPost = ({ route, navigation }) => {
   const { postId, tipo = "products" } = route.params;
   const [post, setPost] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
   const { width } = useWindowDimensions();
   const isLargeScreen = width > 800;
 
@@ -88,12 +91,27 @@ const DetailPost = ({ route, navigation }) => {
     navigation.navigate("Perfil", { userId: post.userId });
   };
 
+  const openModal = (index) => {
+    setCurrentImageIndex(index);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => setModalVisible(false);
+
+  // PanResponder para swipe en mobile
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20,
+    onPanResponderRelease: (_, gesture) => {
+      if (gesture.dx < -20) nextImage();
+      else if (gesture.dx > 20) prevImage();
+    },
+  });
+
   return (
     <View style={{ flex: 1 }}>
       <Header />
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Botón de volver */}
         <TouchableOpacity
           style={styles.backButtonContainer}
           onPress={() => navigation.goBack()}
@@ -102,22 +120,25 @@ const DetailPost = ({ route, navigation }) => {
         </TouchableOpacity>
 
         <View style={[styles.card, isLargeScreen && styles.cardLarge]}>
-          {/* Imagen */}
           {images.length > 0 ? (
             <View style={styles.carousel}>
               <TouchableOpacity onPress={prevImage} style={styles.arrow}>
                 <Text style={styles.arrowText}>{"<"}</Text>
               </TouchableOpacity>
-              <Image
-                source={{ uri: images[currentImageIndex] }}
-                style={[
-                  styles.image,
-                  {
-                    width: isLargeScreen ? width * 0.3 : width * 0.7,
-                    height: isLargeScreen ? width * 0.3 : width * 0.7,
-                  },
-                ]}
-              />
+
+              <TouchableOpacity onPress={() => openModal(currentImageIndex)}>
+                <Image
+                  source={{ uri: images[currentImageIndex] }}
+                  style={[
+                    styles.image,
+                    {
+                      width: isLargeScreen ? width * 0.3 : width * 0.7,
+                      height: isLargeScreen ? width * 0.3 : width * 0.7,
+                    },
+                  ]}
+                />
+              </TouchableOpacity>
+
               <TouchableOpacity onPress={nextImage} style={styles.arrow}>
                 <Text style={styles.arrowText}>{">"}</Text>
               </TouchableOpacity>
@@ -136,15 +157,35 @@ const DetailPost = ({ route, navigation }) => {
             </View>
           )}
 
-          {/* Texto */}
-          <View
-            style={[styles.textSection, isLargeScreen && styles.textSectionLarge]}
-          >
+          {/* Modal full-screen con swipe */}
+          <Modal visible={modalVisible} transparent={true} animationType="fade">
+            <View style={styles.modalBackground} {...panResponder.panHandlers}>
+              <TouchableOpacity style={styles.modalClose} onPress={closeModal}>
+                <Text style={{ color: "#fff", fontSize: 18 }}>Cerrar ✕</Text>
+              </TouchableOpacity>
+
+              <Image
+                source={{ uri: images[currentImageIndex] }}
+                style={styles.modalImage}
+              />
+
+              {/* Flechas web */}
+              <View style={styles.modalArrows}>
+                <TouchableOpacity onPress={prevImage} style={styles.modalArrow}>
+                  <Text style={styles.modalArrowText}>{"<"}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={nextImage} style={styles.modalArrow}>
+                  <Text style={styles.modalArrowText}>{">"}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
+          <View style={[styles.textSection, isLargeScreen && styles.textSectionLarge]}>
             <Text style={styles.title}>{post.title}</Text>
             <Text style={styles.description}>{post.description}</Text>
             {post.createdAt && <Text style={styles.date}>Publicado: {formattedDate}</Text>}
 
-            {/* Recuadro autor clickeable */}
             <TouchableOpacity
               style={styles.authorBox}
               onPress={handleAuthorPress}
@@ -217,6 +258,12 @@ const styles = StyleSheet.create({
   warning: { color: "red", fontWeight: "bold", fontSize: 14, marginTop: 10 },
   saveContainer: { flexDirection: "row", alignItems: "center", marginTop: 12, gap: 10 },
   savedCount: { fontSize: 14, color: colors.textSecondary },
+  modalBackground: { flex: 1, backgroundColor: "rgba(0,0,0,0.9)", justifyContent: "center", alignItems: "center" },
+  modalImage: { width: "90%", height: "80%", resizeMode: "contain" },
+  modalClose: { position: "absolute", top: 50, right: 20 },
+  modalArrows: { position: "absolute", width: "100%", flexDirection: "row", justifyContent: "space-between", top: "50%" },
+  modalArrow: { padding: 20 },
+  modalArrowText: { color: "#fff", fontSize: 40, fontWeight: "bold" },
 });
 
 export default DetailPost;

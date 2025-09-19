@@ -15,7 +15,7 @@ import AvisoCard from "../components/AvisoCard";
 import colors from "../styles/colors";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import Header from "../components/Header"; // <-- agregado
+import Header from "../components/Header";
 
 const HorizontalRow = ({ data, onSave, onPressItem, isMobile }) => {
   const scrollRef = useRef(null);
@@ -156,8 +156,9 @@ const SavedPosts = () => {
       style={styles.container}
       contentContainerStyle={{ alignItems: "center" }}
     >
-      <Header /> {/* <-- agregado */}
+      <Header />
       <Text style={styles.title}>Posts Guardados</Text>
+
       {/* Tabs */}
       <View style={styles.tabsContainer}>
         <TouchableOpacity
@@ -165,10 +166,7 @@ const SavedPosts = () => {
           onPress={() => setActiveTab("products")}
         >
           <Text
-            style={[
-              styles.tabText,
-              activeTab === "products" && styles.activeTabText,
-            ]}
+            style={[styles.tabText, activeTab === "products" && styles.activeTabText]}
           >
             Productos
           </Text>
@@ -178,54 +176,59 @@ const SavedPosts = () => {
           onPress={() => setActiveTab("avisos")}
         >
           <Text
-            style={[
-              styles.tabText,
-              activeTab === "avisos" && styles.activeTabText,
-            ]}
+            style={[styles.tabText, activeTab === "avisos" && styles.activeTabText]}
           >
             Avisos
           </Text>
         </TouchableOpacity>
       </View>
+
       {/* Productos */}
-      {activeTab === "products" && savedProducts.length > 0 && (
-        <View style={styles.rowContainer}>
-          <HorizontalRow
-            data={savedProducts}
-            onSave={toggleSave}
-            onPressItem={(item) =>
-              navigation.navigate("Driza - Detalle publicacion", {
-                postId: item.id,
-                tipo: "products",
-              })
-            }
-            isMobile={isMobile}
-          />
-        </View>
-      )}
+      {activeTab === "products" &&
+        (savedProducts.length > 0 ? (
+          <View style={styles.rowContainer}>
+            <HorizontalRow
+              data={savedProducts}
+              onSave={toggleSave}
+              onPressItem={(item) =>
+                navigation.navigate("Driza - Detalle publicacion", {
+                  postId: item.id,
+                  tipo: "products",
+                })
+              }
+              isMobile={isMobile}
+            />
+          </View>
+        ) : (
+          <Text style={styles.emptyText}>No guardaste ninguna publicación</Text>
+        ))}
+
       {/* Avisos */}
-      {activeTab === "avisos" && savedAvisos.length > 0 && (
-        <View style={styles.rowContainer}>
-          {savedAvisos.map((item) => (
-            <View key={item.id} style={styles.avisoCardWrapper}>
-              <AvisoCard
-                title={item.title}
-                description={item.description}
-                date={new Date(item.createdAt).toLocaleString()}
-                savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
-                isSaved={!!item.savedBy?.[auth.currentUser.uid]}
-                onSave={() => toggleSave(item.id, item.tipo)}
-                onPress={() =>
-                  navigation.navigate("Driza - Detalle publicacion", {
-                    postId: item.id,
-                    tipo: "avisos",
-                  })
-                }
-              />
-            </View>
-          ))}
-        </View>
-      )}
+      {activeTab === "avisos" &&
+        (savedAvisos.length > 0 ? (
+          <View style={styles.rowContainer}>
+            {savedAvisos.map((item) => (
+              <View key={item.id} style={styles.avisoCardWrapper}>
+                <AvisoCard
+                  title={item.title}
+                  description={item.description}
+                  date={new Date(item.createdAt).toLocaleString()}
+                  savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
+                  isSaved={!!item.savedBy?.[auth.currentUser.uid]}
+                  onSave={() => toggleSave(item.id, item.tipo)}
+                  onPress={() =>
+                    navigation.navigate("Driza - Detalle publicacion", {
+                      postId: item.id,
+                      tipo: "avisos",
+                    })
+                  }
+                />
+              </View>
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.emptyText}>No guardaste ninguna publicación</Text>
+        ))}
     </ScrollView>
   );
 };
@@ -233,7 +236,7 @@ const SavedPosts = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 0, // ⬅ sin espacio arriba
+    paddingTop: 0,
     paddingBottom: 10,
     backgroundColor: colors.background,
   },
@@ -286,6 +289,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: "center",
+    marginVertical: 30,
   },
 });
 

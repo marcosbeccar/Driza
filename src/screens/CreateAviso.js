@@ -21,6 +21,7 @@ const CreateAviso = ({ navigation }) => {
   const [phone, setPhone] = useState("");
   const [images, setImages] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false); // NUEVO: previene doble submit
 
   const db = getDatabase(app);
 
@@ -54,29 +55,36 @@ const CreateAviso = ({ navigation }) => {
   };
 
   const handleSubmit = async () => {
+    if (loading) return; // previene doble submit
+    setLoading(true);
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) {
         setErrorMessage("Debes iniciar sesión para crear un aviso.");
+        setLoading(false);
         return;
       }
 
       // Validaciones
       if (!title.trim()) {
         setErrorMessage("El título es obligatorio.");
+        setLoading(false);
         return;
       }
       if (title.trim().length > 65) {
         setErrorMessage("El título no puede superar los 65 caracteres.");
+        setLoading(false);
         return;
       }
 
       if (!description.trim()) {
         setErrorMessage("La descripción es obligatoria.");
+        setLoading(false);
         return;
       }
       if (description.trim().length > 4000) {
         setErrorMessage("La descripción no puede superar los 4000 caracteres.");
+        setLoading(false);
         return;
       }
 
@@ -84,10 +92,12 @@ const CreateAviso = ({ navigation }) => {
         const digitsOnly = phone.replace(/\D/g, "");
         if (digitsOnly.length < 10) {
           setErrorMessage("El teléfono es muy corto.");
+          setLoading(false);
           return;
         }
         if (digitsOnly.length > 20) {
           setErrorMessage("El teléfono es muy largo.");
+          setLoading(false);
           return;
         }
       }
@@ -119,12 +129,13 @@ const CreateAviso = ({ navigation }) => {
     } catch (error) {
       console.error("Error creando el aviso:", error);
       setErrorMessage("Ocurrió un error al crear el aviso.");
+    } finally {
+      setLoading(false); // vuelve a habilitar el botón
     }
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* HEADER CON BACK */}
       <Header backButton />
 
       <ScrollView contentContainerStyle={styles.container}>
@@ -141,7 +152,6 @@ const CreateAviso = ({ navigation }) => {
           </Text>
         ) : null}
 
-        {/* Input Título */}
         <TextInput
           style={styles.input}
           placeholder="Título"
@@ -153,7 +163,6 @@ const CreateAviso = ({ navigation }) => {
           {`${title.length}/65`}
         </Text>
 
-        {/* Input Descripción */}
         <TextInput
           style={[styles.input, styles.textArea]}
           placeholder="Descripción. Agregá palabras clave para aparecer en los resultados de búsqueda!"
@@ -163,15 +172,11 @@ const CreateAviso = ({ navigation }) => {
           multiline
         />
         <Text
-          style={[
-            styles.counter,
-            description.length > 4000 && styles.counterError,
-          ]}
+          style={[styles.counter, description.length > 4000 && styles.counterError]}
         >
           {`${description.length}/4000`}
         </Text>
 
-        {/* Input Teléfono */}
         <TextInput
           style={styles.input}
           placeholder="Teléfono / WhatsApp (opcional)"
@@ -181,21 +186,24 @@ const CreateAviso = ({ navigation }) => {
           keyboardType="phone-pad"
         />
 
-        {/* Botón Selección de imágenes */}
         <TouchableOpacity style={styles.button} onPress={pickImages}>
           <Text style={styles.buttonText}>Seleccionar Imágenes (opcional)</Text>
         </TouchableOpacity>
 
-        {/* Preview imágenes */}
         <View style={styles.imagePreview}>
           {images.map((image, index) => (
             <Image key={index} source={{ uri: image }} style={styles.image} />
           ))}
         </View>
 
-        {/* Botón publicar */}
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Publicar Aviso</Text>
+        <TouchableOpacity
+          style={[styles.submitButton, loading && { opacity: 0.7 }]}
+          onPress={handleSubmit}
+          disabled={loading} // DESHABILITA mientras se procesa
+        >
+          <Text style={styles.submitButtonText}>
+            {loading ? "Publicando..." : "Publicar Aviso"}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

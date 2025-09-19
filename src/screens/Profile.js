@@ -248,50 +248,58 @@ const Profile = () => {
             </TouchableOpacity>
           </View>
 
-          {activeTab === "products" && products.length > 0 && (
-            <View style={styles.rowContainer}>
-              <HorizontalRow
-                data={products}
-                onSave={handleSave}
-                onPressItem={(item) =>
-                  navigation.navigate("Driza - Detalle publicacion", {
-                    postId: item.id,
-                    tipo: "products",
-                  })
-                }
-                isMobile={isMobile}
-              />
-            </View>
-          )}
+          {/* Productos */}
+          {activeTab === "products" &&
+            (products.length > 0 ? (
+              <View style={styles.rowContainer}>
+                <HorizontalRow
+                  data={products}
+                  onSave={handleSave}
+                  onPressItem={(item) =>
+                    navigation.navigate("Driza - Detalle publicacion", {
+                      postId: item.id,
+                      tipo: "products",
+                    })
+                  }
+                  isMobile={isMobile}
+                />
+              </View>
+            ) : (
+              <Text style={styles.emptyText}>No creaste ninguna publicación</Text>
+            ))}
 
-          {activeTab === "avisos" && avisos.length > 0 && (
-            <View style={styles.rowContainer}>
-              {avisos.map((item) => (
-                <View key={item.id} style={[styles.avisoCardWrapper, { width: cardWidth }]}>
-                  <AvisoCard
-                    title={item.title}
-                    description={item.description}
-                    date={new Date(item.createdAt).toLocaleString()}
-                    savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
-                    isSaved={!!item.savedBy?.[auth.currentUser?.uid]}
-                    onSave={() => handleSave(item.id, "avisos")}
-                    onPress={() =>
-                      navigation.navigate("Driza - Detalle publicacion", { postId: item.id, tipo: "avisos" })
-                    }
-                    organizacion={item.organizacion}
-                  />
-                  {item.userId === auth.currentUser.uid && (
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => handleSave(item.id, "avisos", true)}
-                    >
-                      <Text style={styles.deleteButtonText}>Eliminar</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              ))}
-            </View>
-          )}
+          {/* Avisos */}
+          {activeTab === "avisos" &&
+            (avisos.length > 0 ? (
+              <View style={styles.rowContainer}>
+                {avisos.map((item) => (
+                  <View key={item.id} style={[styles.avisoCardWrapper, { width: cardWidth }]}>
+                    <AvisoCard
+                      title={item.title}
+                      description={item.description}
+                      date={new Date(item.createdAt).toLocaleString()}
+                      savedCount={item.savedBy ? Object.keys(item.savedBy).length : 0}
+                      isSaved={!!item.savedBy?.[auth.currentUser?.uid]}
+                      onSave={() => handleSave(item.id, "avisos")}
+                      onPress={() =>
+                        navigation.navigate("Driza - Detalle publicacion", { postId: item.id, tipo: "avisos" })
+                      }
+                      organizacion={item.organizacion}
+                    />
+                    {item.userId === auth.currentUser.uid && (
+                      <TouchableOpacity
+                        style={styles.deleteButton}
+                        onPress={() => handleSave(item.id, "avisos", true)}
+                      >
+                        <Text style={styles.deleteButtonText}>Eliminar</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.emptyText}>No creaste ninguna publicación</Text>
+            ))}
         </>
       )}
     </ScrollView>
@@ -324,6 +332,7 @@ const styles = StyleSheet.create({
   deleteButton: { marginTop: 8, backgroundColor: colors.error, paddingVertical: 8, borderRadius: 5, alignItems: "center" },
   deleteButtonText: { color: "#fff", fontSize: 14, fontWeight: "600" },
   loading: { textAlign: "center", marginTop: 50, fontSize: 16, color: colors.textSecondary },
+  emptyText: { fontSize: 16, color: colors.textSecondary, textAlign: "center", marginVertical: 30 },
 });
 
 export default Profile;
