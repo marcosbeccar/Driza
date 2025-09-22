@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient"; // 👈 agregado
 import colors from "../styles/colors";
 import logo from "../../assets/Banner_ByN.png";
 
@@ -41,7 +42,7 @@ const Header = () => {
 
   const handleSearch = () => {
     if (query.trim().length > 0) {
-      navigation.navigate("Driza - Resultados de busqueda", { query });
+      navigation.navigate("Driza - Resultados de búsqueda", { query });
       setQuery("");
     }
   };
@@ -52,7 +53,13 @@ const Header = () => {
   };
 
   return (
-    <View style={styles.header}>
+    <LinearGradient
+      colors={["#96a39e", colors.header]} // 👈 degradado
+      locations={[0, 0.54]} // gris ocupa hasta 35%, el resto header
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={styles.header}
+    >
       {/* Botón menú */}
       <View style={styles.menuContainer}>
         <TouchableOpacity onPress={toggleMenu} style={styles.menuButton}>
@@ -112,14 +119,13 @@ const Header = () => {
           </TouchableOpacity>
         )}
       </View>
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   header: {
     width: "100%",
-    backgroundColor: colors.header,
     paddingVertical: 10,
     paddingHorizontal: 20,
     flexDirection: "row",

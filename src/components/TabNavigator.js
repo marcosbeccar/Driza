@@ -13,8 +13,10 @@ import CreateProduct from "../screens/CreateProduct";
 import CreateAviso from "../screens/CreateAviso";
 import AvisosPage from "../screens/AvisosPage";
 import AdminScreen from "../screens/AdminScreen";
-import SearchResults from "../screens/SearchResults"; 
+import SearchResults from "../screens/SearchResults";
 import Header from "../components/Header";
+import EditProduct from "../screens/EditProduct";
+import EditAviso from "../screens/EditAviso";
 
 const Tab = createBottomTabNavigator();
 
@@ -72,6 +74,13 @@ const TabNavigator = () => {
         options={{
           tabBarIcon: () => <FontAwesome name="user" size={24} color="black" />,
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            // Fuerza ir SIEMPRE al perfil del usuario logueado
+            navigation.navigate("Perfil", { userId: auth.currentUser.uid });
+          },
+        })}
       />
 
       {/* Admin solo si es driza.compraventa@gmail.com */}
@@ -128,6 +137,22 @@ const TabNavigator = () => {
           tabBarButton: () => null,
           tabBarItemStyle: { display: "none" },
           headerShown: false,
+        }}
+      />
+       <Tab.Screen
+        name="Driza - Editar producto"
+        component={EditProduct}
+        options={{
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: "none" },
+        }}
+      />
+       <Tab.Screen
+        name="Driza - Editar aviso"
+        component={EditAviso}
+        options={{
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: "none" },
         }}
       />
     </Tab.Navigator>

@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
   Modal,
   PanResponder,
+  Alert,
 } from "react-native";
 import { getDatabase, ref, get, update } from "firebase/database";
 import { auth, app } from "../firebase/config";
@@ -91,6 +92,11 @@ const DetailPost = ({ route, navigation }) => {
     navigation.navigate("Perfil", { userId: post.userId });
   };
 
+  const handleEdit = () => {
+    if (tipo === "products") navigation.navigate("Driza - Editar producto", { postId });
+    else navigation.navigate("Driza - Editar aviso", { postId });
+  };
+
   const openModal = (index) => {
     setCurrentImageIndex(index);
     setModalVisible(true);
@@ -98,7 +104,6 @@ const DetailPost = ({ route, navigation }) => {
 
   const closeModal = () => setModalVisible(false);
 
-  // PanResponder para swipe en mobile
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 20,
     onPanResponderRelease: (_, gesture) => {
@@ -157,41 +162,23 @@ const DetailPost = ({ route, navigation }) => {
             </View>
           )}
 
-          {/* Modal full-screen con swipe */}
-          <Modal visible={modalVisible} transparent={true} animationType="fade">
-            <View style={styles.modalBackground} {...panResponder.panHandlers}>
-              <TouchableOpacity style={styles.modalClose} onPress={closeModal}>
-                <Text style={{ color: "#fff", fontSize: 18 }}>Cerrar ✕</Text>
-              </TouchableOpacity>
-
-              <Image
-                source={{ uri: images[currentImageIndex] }}
-                style={styles.modalImage}
-              />
-
-              {/* Flechas web */}
-              <View style={styles.modalArrows}>
-                <TouchableOpacity onPress={prevImage} style={styles.modalArrow}>
-                  <Text style={styles.modalArrowText}>{"<"}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={nextImage} style={styles.modalArrow}>
-                  <Text style={styles.modalArrowText}>{">"}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
-
           <View style={[styles.textSection, isLargeScreen && styles.textSectionLarge]}>
             <Text style={styles.title}>{post.title}</Text>
             <Text style={styles.description}>{post.description}</Text>
             {post.createdAt && <Text style={styles.date}>Publicado: {formattedDate}</Text>}
+
+            {post.userId === auth.currentUser.uid && (
+              <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+                <Text style={styles.editButtonText}>✏️ Editar</Text>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={styles.authorBox}
               onPress={handleAuthorPress}
               activeOpacity={0.8}
             >
-              <Text style={styles.authorTitle}>Datos del autor</Text>
+              <Text style={styles.authorTitle}>Datos de contacto</Text>
               {post.email && <Text style={styles.authorText}>📧 {post.email}</Text>}
               {post.phone && <Text style={styles.authorText}>📱 {post.phone}</Text>}
             </TouchableOpacity>
@@ -215,6 +202,28 @@ const DetailPost = ({ route, navigation }) => {
           </View>
         </View>
       </ScrollView>
+
+      <Modal visible={modalVisible} transparent={true} animationType="fade">
+        <View style={styles.modalBackground} {...panResponder.panHandlers}>
+          <TouchableOpacity style={styles.modalClose} onPress={closeModal}>
+            <Text style={{ color: "#fff", fontSize: 18 }}>Cerrar ✕</Text>
+          </TouchableOpacity>
+
+          <Image
+            source={{ uri: images[currentImageIndex] }}
+            style={styles.modalImage}
+          />
+
+          <View style={styles.modalArrows}>
+            <TouchableOpacity onPress={prevImage} style={styles.modalArrow}>
+              <Text style={styles.modalArrowText}>{"<"}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={nextImage} style={styles.modalArrow}>
+              <Text style={styles.modalArrowText}>{">"}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -258,6 +267,8 @@ const styles = StyleSheet.create({
   warning: { color: "red", fontWeight: "bold", fontSize: 14, marginTop: 10 },
   saveContainer: { flexDirection: "row", alignItems: "center", marginTop: 12, gap: 10 },
   savedCount: { fontSize: 14, color: colors.textSecondary },
+  editButton: { marginTop: 15, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: colors.primaryButton, borderRadius: 6, alignSelf: "flex-start" },
+  editButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
   modalBackground: { flex: 1, backgroundColor: "rgba(0,0,0,0.9)", justifyContent: "center", alignItems: "center" },
   modalImage: { width: "90%", height: "80%", resizeMode: "contain" },
   modalClose: { position: "absolute", top: 50, right: 20 },

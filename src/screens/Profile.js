@@ -1,5 +1,5 @@
 // filepath: src/screens/Profile.js
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,13 +7,15 @@ import {
   StyleSheet,
   ScrollView,
   Dimensions,
+  Alert,
+  Platform,
 } from "react-native";
 import { auth, db } from "../firebase/config";
 import { ref, onValue, get, remove, update } from "firebase/database";
 import Post from "../components/Post";
 import AvisoCard from "../components/AvisoCard";
 import colors from "../styles/colors";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Header from "../components/Header";
 
@@ -101,7 +103,9 @@ const HorizontalRow = ({ data, onSave, onPressItem, isMobile }) => {
 const Profile = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const viewedUserId = route.params?.userId || auth.currentUser.uid;
+  const [viewedUserId, setViewedUserId] = useState(
+    route.params?.userId || auth.currentUser.uid
+  );
 
   const [userName, setUserName] = useState("Usuario");
   const [email, setEmail] = useState("");
@@ -120,6 +124,13 @@ const Profile = () => {
     return () => subscription?.remove?.();
   }, []);
 
+  // 🔄 cuando gana foco, resetear a mi perfil si no hay userId en params
+  useFocusEffect(
+  useCallback(() => {
+    setViewedUserId(route.params?.userId || auth.currentUser.uid);
+  }, [route.params?.userId])
+);
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -134,7 +145,7 @@ const Profile = () => {
       }
     };
 
-    fetchUser();
+    if (viewedUserId) fetchUser();
 
     const productsRef = ref(db, "products");
     const unsubProducts = onValue(productsRef, (snapshot) => {
@@ -166,36 +177,50 @@ const Profile = () => {
 
   const handleSave = async (id, tipo, isDelete = false) => {
     try {
-      if (viewedUserId !== auth.currentUser.uid && isDelete) {
-        alert("No puedes eliminar publicaciones de otro usuario");
+      if (isDelete) {
+        const confirmDelete =
+          Platform.OS === "web"
+            ? window.confirm("¿Estás seguro de que querés eliminar esta publicación?")
+            : null;
+
+        if (Platform.OS !== "web") {
+          Alert.alert("Confirmar eliminación", "¿Estás seguro?", [
+            { text: "Cancelar", style: "cancel" },
+            {
+              text: "Eliminar",
+              style: "destructive",
+              onPress: async () => {
+                await remove(ref(db, `${tipo}/${id}`));
+              },
+            },
+          ]);
+        } else if (confirmDelete) {
+          await remove(ref(db, `${tipo}/${id}`));
+        }
         return;
       }
 
+      // Guardar / desguardar
       const itemRef = ref(db, `${tipo}/${id}`);
       const snapshot = await get(itemRef);
       if (!snapshot.exists()) return;
 
       const itemData = snapshot.val();
+      const savedBy = itemData.savedBy || {};
 
-      if (isDelete) {
-        if (itemData.userId !== auth.currentUser.uid) {
-          alert("Error: No tienes permisos para eliminar esta publicación");
-          return;
-        }
-        await remove(itemRef);
-        if (tipo === "products") setProducts((prev) => prev.filter((p) => p.id !== id));
-        else setAvisos((prev) => prev.filter((a) => a.id !== id));
-        return;
+      if (savedBy[auth.currentUser.uid]) {
+        delete savedBy[auth.currentUser.uid];
+      } else {
+        savedBy[auth.currentUser.uid] = true;
       }
 
-      const savedBy = itemData.savedBy || {};
-      if (savedBy[auth.currentUser.uid]) delete savedBy[auth.currentUser.uid];
-      else savedBy[auth.currentUser.uid] = true;
       await update(itemRef, { savedBy });
 
-      if (tipo === "products")
+      if (tipo === "products") {
         setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, savedBy } : p)));
-      else setAvisos((prev) => prev.map((a) => (a.id === id ? { ...a, savedBy } : a)));
+      } else {
+        setAvisos((prev) => prev.map((a) => (a.id === id ? { ...a, savedBy } : a)));
+      }
     } catch (err) {
       console.error("Error al guardar/desguardar:", err);
     }
@@ -216,9 +241,7 @@ const Profile = () => {
       {isOwnProfile && (
         <TouchableOpacity
           style={styles.logoutButton}
-          onPress={() =>
-            auth.signOut().then(() => navigation.navigate("Auth"))
-          }
+          onPress={() => auth.signOut().then(() => navigation.navigate("Auth"))}
         >
           <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
         </TouchableOpacity>
@@ -282,7 +305,10 @@ const Profile = () => {
                       isSaved={!!item.savedBy?.[auth.currentUser?.uid]}
                       onSave={() => handleSave(item.id, "avisos")}
                       onPress={() =>
-                        navigation.navigate("Driza - Detalle publicacion", { postId: item.id, tipo: "avisos" })
+                        navigation.navigate("Driza - Detalle publicacion", {
+                          postId: item.id,
+                          tipo: "avisos",
+                        })
                       }
                       organizacion={item.organizacion}
                     />

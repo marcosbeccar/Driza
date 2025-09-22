@@ -110,11 +110,11 @@ const AuthScreen = () => {
       <Image source={require("../../assets/Banner_chato.png")} style={styles.logo} />
 
       <Text style={styles.title}>
-        Compra y vende dentro de tu comunidad. En Driza es fácil y seguro.
+        Comprá y vendé dentro de tu comunidad. En Driza es fácil y seguro.
       </Text>
 
       <Text style={styles.subtitle}>
-        Inicia sesión o regístrate con tu cuenta de Google
+        Iniciá sesión o registrate con tu cuenta de Google
       </Text>
 
       {errorMessage ? (
