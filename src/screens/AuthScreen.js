@@ -5,7 +5,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   Image,
 } from "react-native-web";
 import {
@@ -20,6 +19,7 @@ import { ref, set, get } from "firebase/database";
 import { auth, db } from "../firebase/config";
 import colors from "../styles/colors";
 import { useNavigation } from "@react-navigation/native";
+import Loader from "../components/Loader"; // 👈 importamos tu loader
 
 const AuthScreen = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -30,9 +30,13 @@ const AuthScreen = () => {
   // 🔹 Escuchar estado de auth
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setLoading(true); // activa loader al iniciar chequeo
       if (user) {
         const allowed = await handleUser(user);
-        if (!allowed) return; // detiene flujo si baneado
+        if (!allowed) {
+          setLoading(false);
+          return;
+        }
       }
       setLoading(false);
     });
@@ -41,16 +45,24 @@ const AuthScreen = () => {
 
   // 🔹 Manejar login Google con popup
   const handleGoogleLogin = async () => {
+    setLoading(true);
     const provider = new GoogleAuthProvider();
     try {
       await setPersistence(auth, browserLocalPersistence);
 
       const result = await signInWithPopup(auth, provider);
       if (result.user) {
-        await handleUser(result.user);
+        const allowed = await handleUser(result.user);
+        if (!allowed) {
+          setLoading(false);
+          return;
+        }
       }
     } catch (error) {
       console.error("❌ Error al iniciar sesión con Google:", error);
+      setErrorMessage("Error al iniciar sesión, intentá de nuevo.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -58,50 +70,51 @@ const AuthScreen = () => {
   const handleUser = async (user) => {
     if (!user) return false;
 
-    // Verificar si el email está baneado
-    const bannedRef = ref(db, `baneados/${user.email.replace(/\./g, "_")}`);
-    const bannedSnap = await get(bannedRef);
+    try {
+      // Verificar si el email está baneado
+      const bannedRef = ref(db, `baneados/${user.email.replace(/\./g, "_")}`);
+      const bannedSnap = await get(bannedRef);
 
-    if (bannedSnap.exists() && bannedSnap.val()?.banned) {
-      console.warn("🚫 Usuario baneado intentó iniciar sesión:", user.email);
-      await signOut(auth); // cerrar sesión
-      setErrorMessage("Tu cuenta ha sido baneada y no puedes iniciar sesión.");
-      return false;
-    }
-
-    // Si no está baneado, crear usuario en DB si no existe
-    const userRef = ref(db, `users/${user.uid}`);
-    const snapshot = await get(userRef);
-
-    if (!snapshot.exists()) {
-      let organizacion = "NO";
-      if (user.email.endsWith("@udesa.edu.ar")) {
-        organizacion = "UDESA";
+      if (bannedSnap.exists() && bannedSnap.val()?.banned) {
+        console.warn("🚫 Usuario baneado intentó iniciar sesión:", user.email);
+        await signOut(auth); // cerrar sesión
+        setErrorMessage("Tu cuenta ha sido baneada y no puedes iniciar sesión.");
+        return false;
       }
 
-      await set(userRef, {
-        email: user.email,
-        userName: user.displayName,
-        savedPosts: {},
-        organizacion,
-      });
+      // Si no está baneado, crear usuario en DB si no existe
+      const userRef = ref(db, `users/${user.uid}`);
+      const snapshot = await get(userRef);
 
-      console.log("📌 Usuario creado en DB con organización:", organizacion);
-    } else {
-      console.log("ℹ️ Usuario ya existía en DB, no se sobrescribió.");
+      if (!snapshot.exists()) {
+        let organizacion = "NO";
+        if (user.email.endsWith("@udesa.edu.ar")) {
+          organizacion = "UDESA";
+        }
+
+        await set(userRef, {
+          email: user.email,
+          userName: user.displayName,
+          savedPosts: {},
+          organizacion,
+        });
+
+        console.log("📌 Usuario creado en DB con organización:", organizacion);
+      } else {
+        console.log("ℹ️ Usuario ya existía en DB, no se sobrescribió.");
+      }
+
+      return true;
+    } catch (err) {
+      console.error("❌ Error en handleUser:", err);
+      setErrorMessage("Hubo un problema al procesar tu cuenta.");
+      return false;
     }
-
-    return true;
   };
 
-  // 🔹 Loader mientras se inicializa
+  // 🔹 Loader mientras se inicializa / procesa
   if (loading) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color={colors.primaryButton} />
-        <Text style={styles.loaderText}>Iniciando sesión...</Text>
-      </View>
-    );
+    return <Loader message="Iniciando sesión..." />; // 👈 usamos tu Loader
   }
 
   return (
@@ -151,17 +164,6 @@ const AuthScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  loaderContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.background,
-  },
-  loaderText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
   container: {
     flex: 1,
     justifyContent: "center",

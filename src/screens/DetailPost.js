@@ -10,7 +10,6 @@ import {
   useWindowDimensions,
   Modal,
   PanResponder,
-  Alert,
 } from "react-native";
 import { getDatabase, ref, get, update } from "firebase/database";
 import { auth, app } from "../firebase/config";
@@ -163,15 +162,18 @@ const DetailPost = ({ route, navigation }) => {
           )}
 
           <View style={[styles.textSection, isLargeScreen && styles.textSectionLarge]}>
-            <Text style={styles.title}>{post.title}</Text>
+            {/* Contenedor título + editar */}
+            <View style={styles.titleRow}>
+              <Text style={styles.title}>{post.title}</Text>
+              {post.userId === auth.currentUser.uid && (
+                <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+                  <Text style={styles.editButtonText}>✏️ Editar</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
             <Text style={styles.description}>{post.description}</Text>
             {post.createdAt && <Text style={styles.date}>Publicado: {formattedDate}</Text>}
-
-            {post.userId === auth.currentUser.uid && (
-              <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-                <Text style={styles.editButtonText}>✏️ Editar</Text>
-              </TouchableOpacity>
-            )}
 
             <TouchableOpacity
               style={styles.authorBox}
@@ -258,6 +260,7 @@ const styles = StyleSheet.create({
   arrowText: { fontSize: 30, color: colors.primaryButton, fontWeight: "bold" },
   textSection: { marginTop: 15 },
   textSectionLarge: { flex: 1, marginTop: 0 },
+  titleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, // NUEVO
   title: { fontSize: 26, fontWeight: "bold", marginBottom: 15, color: colors.textPrimary },
   description: { fontSize: 16, color: colors.textSecondary, marginBottom: 10 },
   date: { fontSize: 14, color: colors.textSecondary, marginBottom: 10 },
@@ -267,7 +270,7 @@ const styles = StyleSheet.create({
   warning: { color: "red", fontWeight: "bold", fontSize: 14, marginTop: 10 },
   saveContainer: { flexDirection: "row", alignItems: "center", marginTop: 12, gap: 10 },
   savedCount: { fontSize: 14, color: colors.textSecondary },
-  editButton: { marginTop: 15, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: colors.primaryButton, borderRadius: 6, alignSelf: "flex-start" },
+  editButton: { paddingVertical: 6, paddingHorizontal: 12, backgroundColor: colors.primaryButton, borderRadius: 6 },
   editButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
   modalBackground: { flex: 1, backgroundColor: "rgba(0,0,0,0.9)", justifyContent: "center", alignItems: "center" },
   modalImage: { width: "90%", height: "80%", resizeMode: "contain" },

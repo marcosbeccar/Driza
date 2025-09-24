@@ -14,12 +14,14 @@ import { app, auth } from "../firebase/config";
 import colors from "../styles/colors";
 import AvisoCard from "../components/AvisoCard";
 import Header from "../components/Header";
+import Loader from "../components/Loader"; // 👈 importamos loader
 
 const { width } = Dimensions.get("window");
 
 const AvisosPage = ({ navigation }) => {
   const [avisos, setAvisos] = useState([]);
   const [showOnlyWithOrg, setShowOnlyWithOrg] = useState(false);
+  const [loading, setLoading] = useState(true); // 👈 estado loader
   const db = getDatabase(app);
 
   useEffect(() => {
@@ -35,6 +37,7 @@ const AvisosPage = ({ navigation }) => {
       } else {
         setAvisos([]);
       }
+      setLoading(false); // 👈 ocultar loader al terminar
     });
 
     return () => unsubscribe();
@@ -80,6 +83,15 @@ const AvisosPage = ({ navigation }) => {
     );
   }
 
+  // 👇 loader a pantalla completa
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <Loader name="6-dots" color={colors.primaryButton} />
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
       <Header />
@@ -91,7 +103,7 @@ const AvisosPage = ({ navigation }) => {
           style={styles.filterButton}
         >
           <Text style={styles.filterButtonText}>
-            {showOnlyWithOrg ? "Mostrar todos" : "Solo organizaciones"}
+            {showOnlyWithOrg ? "Mostrar todos" : "Solo organización"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -125,6 +137,12 @@ const AvisosPage = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  loaderContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
     paddingTop: 0,

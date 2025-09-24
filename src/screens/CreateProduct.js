@@ -27,9 +27,12 @@ const CreateProduct = ({ navigation }) => {
 
   const pickImages = async () => {
     try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        setErrorMessage("Necesitamos permisos para acceder a las imágenes. Si está en un teléfono, intente desde una computadora.");
+        setErrorMessage(
+          "Necesitamos permisos para acceder a las imágenes. Si está en un teléfono, intente desde una computadora."
+        );
         return;
       }
 
@@ -50,7 +53,9 @@ const CreateProduct = ({ navigation }) => {
       }
     } catch (err) {
       console.error("Error pickImages:", err);
-      setErrorMessage("No se pudieron seleccionar las imágenes. Si está en un teléfono, intente desde una computadora.");
+      setErrorMessage(
+        "No se pudieron seleccionar las imágenes. Si está en un teléfono, intente desde una computadora."
+      );
     }
   };
 
@@ -161,7 +166,9 @@ const CreateProduct = ({ navigation }) => {
           value={title}
           onChangeText={setTitle}
         />
-        <Text style={[styles.counter, title.length > 65 && styles.counterError]}>
+        <Text
+          style={[styles.counter, title.length > 65 && styles.counterError]}
+        >
           {`${title.length}/65`}
         </Text>
 
@@ -174,7 +181,10 @@ const CreateProduct = ({ navigation }) => {
           multiline
         />
         <Text
-          style={[styles.counter, description.length > 4000 && styles.counterError]}
+          style={[
+            styles.counter,
+            description.length > 4000 && styles.counterError,
+          ]}
         >
           {`${description.length}/4000`}
         </Text>
@@ -191,6 +201,11 @@ const CreateProduct = ({ navigation }) => {
         <TouchableOpacity style={styles.button} onPress={pickImages}>
           <Text style={styles.buttonText}>Seleccionar Imágenes</Text>
         </TouchableOpacity>
+
+        <Text style={styles.imageNotice}>
+          Para garantizar la mejor calidad, las imágenes se mostrarán en formato
+          cuadrado. Te recomendamos subir fotos con proporción 1:1.
+        </Text>
 
         <View style={styles.imagePreview}>
           {images.map((image, index) => (
@@ -225,7 +240,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
-  message: { fontSize: 16, marginBottom: 15, textAlign: "center", fontWeight: "600" },
+  message: {
+    fontSize: 16,
+    marginBottom: 15,
+    textAlign: "center",
+    fontWeight: "600",
+  },
   error: { color: "red" },
   success: { color: "green" },
   input: {
@@ -239,14 +259,46 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   textArea: { height: 120, textAlignVertical: "top" },
-  counter: { alignSelf: "flex-end", marginBottom: 12, color: colors.textSecondary, fontSize: 12 },
+  counter: {
+    alignSelf: "flex-end",
+    marginBottom: 12,
+    color: colors.textSecondary,
+    fontSize: 12,
+  },
   counterError: { color: "red" },
-  button: { backgroundColor: colors.secondaryButton, paddingVertical: 12, borderRadius: 8, alignItems: "center", marginBottom: 16 },
+  button: {
+    backgroundColor: colors.secondaryButton,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 16,
+  },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   imagePreview: { flexDirection: "row", flexWrap: "wrap", marginBottom: 16 },
-  image: { width: 100, height: 100, borderRadius: 8, marginRight: 8, marginBottom: 8, borderWidth: 1, borderColor: colors.border },
-  submitButton: { backgroundColor: colors.primaryButton, paddingVertical: 14, borderRadius: 8, alignItems: "center", marginBottom: 30 },
+  image: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    marginRight: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  submitButton: {
+    backgroundColor: colors.primaryButton,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 30,
+  },
   submitButtonText: { color: "#fff", fontSize: 18, fontWeight: "700" },
+  imageNotice: {
+  fontSize: 12,
+  color: colors.textSecondary,
+  marginBottom: 16,
+  textAlign: "center",
+}
+
 });
 
 export default CreateProduct;

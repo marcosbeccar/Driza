@@ -27,7 +27,8 @@ const CreateAviso = ({ navigation }) => {
 
   const pickImages = async () => {
     try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
         setErrorMessage("Necesitamos permisos para acceder a las imágenes.");
         return;
@@ -159,7 +160,9 @@ const CreateAviso = ({ navigation }) => {
           value={title}
           onChangeText={setTitle}
         />
-        <Text style={[styles.counter, title.length > 65 && styles.counterError]}>
+        <Text
+          style={[styles.counter, title.length > 65 && styles.counterError]}
+        >
           {`${title.length}/65`}
         </Text>
 
@@ -172,7 +175,10 @@ const CreateAviso = ({ navigation }) => {
           multiline
         />
         <Text
-          style={[styles.counter, description.length > 4000 && styles.counterError]}
+          style={[
+            styles.counter,
+            description.length > 4000 && styles.counterError,
+          ]}
         >
           {`${description.length}/4000`}
         </Text>
@@ -189,6 +195,11 @@ const CreateAviso = ({ navigation }) => {
         <TouchableOpacity style={styles.button} onPress={pickImages}>
           <Text style={styles.buttonText}>Seleccionar Imágenes (opcional)</Text>
         </TouchableOpacity>
+
+        <Text style={styles.imageNotice}>
+          Para garantizar la mejor calidad, las imágenes se mostrarán en formato
+          cuadrado. Te recomendamos subir fotos con proporción 1:1.
+        </Text>
 
         <View style={styles.imagePreview}>
           {images.map((image, index) => (
@@ -276,6 +287,13 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   submitButtonText: { color: "#fff", fontSize: 18, fontWeight: "700" },
+  imageNotice: {
+  fontSize: 12,
+  color: colors.textSecondary,
+  marginBottom: 16,
+  textAlign: "center",
+}
+
 });
 
 export default CreateAviso;

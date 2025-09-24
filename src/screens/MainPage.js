@@ -22,6 +22,7 @@ import colors from "../styles/colors";
 import Post from "../components/Post";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Header from "../components/Header";
+import Loader from "../components/Loader"; // 👈 nuestro loader animado
 
 // --- Nuevo componente para filas ---
 const HorizontalRow = ({ data, isMobile, onSave, navigation }) => {
@@ -82,7 +83,9 @@ const HorizontalRow = ({ data, isMobile, onSave, navigation }) => {
               isSaved={!!product.savedBy?.[auth.currentUser.uid]}
               onSave={() => onSave(product.id)}
               onPress={() =>
-                navigation.navigate("Driza - Detalle publicacion", { postId: product.id })
+                navigation.navigate("Driza - Detalle publicacion", {
+                  postId: product.id,
+                })
               }
             />
           </View>
@@ -98,6 +101,7 @@ const MainPage = ({ navigation }) => {
     Dimensions.get("window").width
   );
   const [showOnlyWithOrg, setShowOnlyWithOrg] = useState(false);
+  const [loading, setLoading] = useState(true); // 👈 estado para loader
   const db = getDatabase(app);
 
   useEffect(() => {
@@ -120,6 +124,7 @@ const MainPage = ({ navigation }) => {
       } else {
         setProducts([]);
       }
+      setLoading(false); // 👈 ocultar loader
     });
     return () => unsubscribe();
   }, []);
@@ -160,11 +165,22 @@ const MainPage = ({ navigation }) => {
 
   let normales = products.filter((p) => !p.estado || p.estado === "normal");
   if (showOnlyWithOrg) {
-    normales = normales.filter((p) => p.organizacion && p.organizacion !== "NO");
+    normales = normales.filter(
+      (p) => p.organizacion && p.organizacion !== "NO"
+    );
   }
 
   const normalRows = [[], [], []];
   normales.forEach((product, idx) => normalRows[idx % 3].push(product));
+
+  // 👇 loader a pantalla completa mientras carga
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <Loader name="6-dots" color={colors.primaryButton} />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -184,9 +200,7 @@ const MainPage = ({ navigation }) => {
             style={styles.filterButton}
           >
             <Text style={styles.filterButtonText}>
-              {showOnlyWithOrg
-                ? "Mostrar todos"
-                : "Solo organizaciones"}
+              {showOnlyWithOrg ? "Mostrar todos" : "Solo organización"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -233,10 +247,11 @@ const MainPage = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  loaderContainer: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingVertical: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
   rowContainer: { marginBottom: 25, width: "100%", maxWidth: 1200 },
   rowTitle: {

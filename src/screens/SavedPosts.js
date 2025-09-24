@@ -157,7 +157,7 @@ const SavedPosts = () => {
       contentContainerStyle={{ alignItems: "center" }}
     >
       <Header />
-      <Text style={styles.title}>Posts Guardados</Text>
+      <Text style={styles.title}>Publicaciones guardadas</Text>
 
       {/* Tabs */}
       <View style={styles.tabsContainer}>
@@ -244,6 +244,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontSize: 24,
     fontWeight: "bold",
+    paddingTop: 20,
     marginBottom: 20,
     textAlign: "center",
   },
